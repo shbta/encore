@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// +build !evmc
+// +build evmc
 
 package runtime
 
@@ -22,6 +22,10 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
 )
+
+func init() {
+	vm.InitEVMCEwasm("libhera.so")
+}
 
 func NewEnv(cfg *Config) *vm.EVM {
 	context := vm.Context{
@@ -38,5 +42,6 @@ func NewEnv(cfg *Config) *vm.EVM {
 		GasPrice:    cfg.GasPrice,
 	}
 
+	cfg.EVMConfig.EWASMInterpreter = "libhera.so"
 	return vm.NewEVM(context, cfg.State, cfg.ChainConfig, cfg.EVMConfig)
 }

@@ -69,7 +69,7 @@ func setDefaults(cfg *Config) {
 		cfg.Time = big.NewInt(time.Now().Unix())
 	}
 	if cfg.GasLimit == 0 {
-		cfg.GasLimit = math.MaxUint64
+		cfg.GasLimit = math.MaxInt64
 	}
 	if cfg.GasPrice == nil {
 		cfg.GasPrice = new(big.Int)
