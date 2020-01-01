@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// +build !evmc
+// +build evmc
 
 package runtime
 
@@ -65,7 +65,7 @@ func TestEVM(t *testing.T) {
 		}
 	}()
 
-	Execute([]byte{
+	code := []byte{
 		byte(vm.DIFFICULTY),
 		byte(vm.TIMESTAMP),
 		byte(vm.GASLIMIT),
@@ -73,18 +73,22 @@ func TestEVM(t *testing.T) {
 		byte(vm.ORIGIN),
 		byte(vm.BLOCKHASH),
 		byte(vm.COINBASE),
-	}, nil, nil)
+	}
+	println("test code:", code)
+	Execute(code, nil, nil)
 }
 
 func TestExecute(t *testing.T) {
-	ret, _, err := Execute([]byte{
+	code := []byte{
 		byte(vm.PUSH1), 10,
 		byte(vm.PUSH1), 0,
 		byte(vm.MSTORE),
 		byte(vm.PUSH1), 32,
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
-	}, nil, nil)
+	}
+	println("test Execute code:", code)
+	ret, _, err := Execute(code, nil, nil)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -98,14 +102,16 @@ func TestExecute(t *testing.T) {
 func TestCall(t *testing.T) {
 	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
 	address := common.HexToAddress("0x0a")
-	state.SetCode(address, []byte{
+	code := []byte{
 		byte(vm.PUSH1), 10,
 		byte(vm.PUSH1), 0,
 		byte(vm.MSTORE),
 		byte(vm.PUSH1), 32,
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
-	})
+	}
+	println("test call code:", code)
+	state.SetCode(address, code)
 
 	ret, _, err := Call(address, nil, &Config{State: state})
 	if err != nil {

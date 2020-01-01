@@ -145,21 +145,21 @@ func NewEVM(ctx Context, statedb StateDB, chainConfig *params.ChainConfig, vmCon
 		interpreters: make([]Interpreter, 0, 2),
 	}
 
-	if chainConfig.IsEWASM(ctx.BlockNumber) {
-		// to be implemented by EVM-C and Wagon PRs.
-		if vmConfig.EWASMInterpreter != "" {
-			//  extIntOpts := strings.Split(vmConfig.EWASMInterpreter, ":")
-			//  path := extIntOpts[0]
-			//  options := []string{}
-			//  if len(extIntOpts) > 1 {
-			//    options = extIntOpts[1..]
-			//  }
-			//  evm.interpreters = append(evm.interpreters, NewEVMVCInterpreter(evm, vmConfig, options))
-			evm.interpreters = append(evm.interpreters, &EVMC{ewasmModule, evm, evmc.CapabilityEWASM, false})
-		} else {
-			panic("The default ewasm interpreter not supported yet.")
-		}
+	//if chainConfig.IsEWASM(ctx.BlockNumber) {
+	// to be implemented by EVM-C and Wagon PRs.
+	if vmConfig.EWASMInterpreter != "" {
+		//  extIntOpts := strings.Split(vmConfig.EWASMInterpreter, ":")
+		//  path := extIntOpts[0]
+		//  options := []string{}
+		//  if len(extIntOpts) > 1 {
+		//    options = extIntOpts[1..]
+		//  }
+		//  evm.interpreters = append(evm.interpreters, NewEVMVCInterpreter(evm, vmConfig, options))
+		evm.interpreters = append(evm.interpreters, &EVMC{ewasmModule, evm, evmc.CapabilityEWASM, false})
+	} else {
+		//panic("The default ewasm interpreter not supported yet.")
 	}
+	//}
 
 	// vmConfig.EVMInterpreter will be used by EVM-C, it won't be checked here
 	// as we always want to have the built-in EVM as the failover option.

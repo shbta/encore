@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	vm.InitEVMCEwasm("libhera.so")
+	vm.InitEVMCEwasm("libhera.so,evm1mode=reject")
 }
 
 func NewEnv(cfg *Config) *vm.EVM {

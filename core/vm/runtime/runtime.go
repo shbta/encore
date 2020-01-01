@@ -59,6 +59,7 @@ func setDefaults(cfg *Config) {
 			EIP150Block:    new(big.Int),
 			EIP155Block:    new(big.Int),
 			EIP158Block:    new(big.Int),
+			ByzantiumBlock: new(big.Int),
 		}
 	}
 
