@@ -18,6 +18,7 @@
 package runtime
 
 import (
+	"encoding/hex"
 	"math/big"
 	"strings"
 	"testing"
@@ -74,7 +75,7 @@ func TestEVM(t *testing.T) {
 		byte(vm.BLOCKHASH),
 		byte(vm.COINBASE),
 	}
-	println("test code:", code)
+	println("test code:", hex.Dump(code))
 	Execute(code, nil, nil)
 }
 
@@ -87,7 +88,7 @@ func TestExecute(t *testing.T) {
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
 	}
-	println("test Execute code:", code)
+	println("test Execute code:", hex.Dump(code))
 	ret, _, err := Execute(code, nil, nil)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
@@ -110,7 +111,7 @@ func TestCall(t *testing.T) {
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
 	}
-	println("test call code:", code)
+	println("test call code:", hex.Dump(code))
 	state.SetCode(address, code)
 
 	ret, _, err := Call(address, nil, &Config{State: state})
