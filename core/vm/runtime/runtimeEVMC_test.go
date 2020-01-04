@@ -79,16 +79,13 @@ func TestEVM(t *testing.T) {
 	Execute(code, nil, nil)
 }
 
+var evmCode = common.Hex2Bytes("0061736d0100000001090260000060027f7f0002130108657468657265756d0666696e6973680001030201000503010002071102066d656d6f72790200046d61696e00010a0a0108004100412010000b0b0e010041180b08000000000000000a")
+var evmCode1 = common.Hex2Bytes("0061736d0100000001100360027f7f006000017f60027f7f017f02130108657468657265756d0666696e697368000003030201020405017001010105030100020608017f01419088040b071102066d656d6f72790200046d61696e00020a1d021200418088808000410810808080800041000b08001081808080000b0b0f01004180080b08000000000000000a")
+var evmCode2 = common.Hex2Bytes("0061736d010000000105016000017f030201000503010002071102066d656d6f72790200046d61696e00000a06010400410a0b")
+var evmCode3 = common.Hex2Bytes("0061736d01000000010e0360027f7f0060000060027f7f0002130108657468657265756d0666696e6973680002030201010405017001010105030100020608017f01419088040b071102066d656d6f72790200046d61696e00010901000a0b010900418008410810000b0b0f01004180080b08000000000000000a")
+
 func TestExecute(t *testing.T) {
-	code := []byte{
-		byte(vm.PUSH1), 10,
-		byte(vm.PUSH1), 0,
-		byte(vm.MSTORE),
-		byte(vm.PUSH1), 32,
-		byte(vm.PUSH1), 0,
-		byte(vm.RETURN),
-	}
-	println("test Execute code:", hex.Dump(code))
+	code := evmCode3
 	ret, _, err := Execute(code, nil, nil)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
@@ -103,15 +100,8 @@ func TestExecute(t *testing.T) {
 func TestCall(t *testing.T) {
 	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
 	address := common.HexToAddress("0x0a")
-	code := []byte{
-		byte(vm.PUSH1), 10,
-		byte(vm.PUSH1), 0,
-		byte(vm.MSTORE),
-		byte(vm.PUSH1), 32,
-		byte(vm.PUSH1), 0,
-		byte(vm.RETURN),
-	}
-	println("test call code:", hex.Dump(code))
+	code := evmCode
+	println("test call codeLen:", len(code))
 	state.SetCode(address, code)
 
 	ret, _, err := Call(address, nil, &Config{State: state})
