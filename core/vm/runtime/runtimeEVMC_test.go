@@ -19,7 +19,9 @@ package runtime
 
 import (
 	"encoding/hex"
+	"io/ioutil"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
@@ -86,6 +88,26 @@ var evmCode3 = common.Hex2Bytes("0061736d01000000010e0360027f7f0060000060027f7f0
 
 func TestExecute(t *testing.T) {
 	code := evmCode3
+	ret, _, err := Execute(code, nil, nil)
+	if err != nil {
+		t.Fatal("didn't expect error", err)
+	}
+
+	num := new(big.Int).SetBytes(ret)
+	if num.Cmp(big.NewInt(10)) != 0 {
+		t.Error("Expected 10, got", num)
+	}
+}
+
+func TestExecuteEWASMFile(t *testing.T) {
+	var code []byte
+	if ff, err := os.Open("test.wasm"); err != nil {
+		t.Fatal("didn't expect error", err)
+	} else {
+		code, _ = ioutil.ReadAll(ff)
+		ff.Close()
+	}
+	println("test execute EWASM file Len:", len(code))
 	ret, _, err := Execute(code, nil, nil)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
