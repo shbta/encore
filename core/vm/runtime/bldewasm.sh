@@ -1,4 +1,9 @@
 #! /bin/bash
+#
+# Requires llvm 8.0.0 or higher
+# llvm 7 does not support import_module/import_name attributes
+# llvm 8 may export __heap_base and __data_end
+#
 
 FILE=$1
 cat <<EOF > /tmp/${FILE}.c
