@@ -7,7 +7,6 @@
 
 FILE=$1
 cat <<EOF > /tmp/${FILE}.c
-
 typedef	int	i32;
 typedef long long i64;
 typedef __int128_t i128;
@@ -15,9 +14,14 @@ typedef	unsigned int	u32;
 typedef unsigned long long u64;
 typedef __uint128_t u128;
 
-void eth_finish(char* _off, i32 _len) __attribute__((import_module("ethereum"), import_name("finish")));
+void eth_finish(char* _off, i32 _len) __attribute__((__import_module__("ethereum"), __import_name__("finish")));
 i32  eth_getCallDataSize() __attribute__((import_module("ethereum"),import_name("getCallDataSize")));
 void eth_callDataCopy(void *res, i32 dOff, i32 dLen) __attribute__((import_module("ethereum"),import_name("callDataCopy")));
+
+static u32 fib(u32 n) {
+	if (n < 2) return n;
+	return fib(n-1)+fib(n-2);
+}
 
 // cpurchase   0xd6960697
 // creceived	0x73fac6f0
@@ -26,7 +30,8 @@ static	char	ret[8]={0,0,0,0, 0,0,0,10};
 static	char	ret1[8]={0,0,0,20};
 void main() // __attribute__((export_name("main")))
 {
-	if (eth_getCallDataSize() < 4) eth_finish(ret, 8);
+	i32	in_len;
+	if ((in_len=eth_getCallDataSize()) < 4) eth_finish(ret, 8);
 	u32 	met;
 	eth_callDataCopy(&met, 0, 4);
 	switch (__builtin_bswap32(met)) {
@@ -35,6 +40,14 @@ void main() // __attribute__((export_name("main")))
 	case 0x590e1ae3:
 		eth_finish(ret1,4);
 	}
+	u32 n = 10;
+	if (in_len >= 36) {
+		eth_callDataCopy(&met, 32, 4);
+		n = __builtin_bswap32(met);
+	}
+	u32 res = __builtin_bswap32(fib(n));
+	*(u32 *)ret1 = res;
+	eth_finish(ret1,4);
 }
 EOF
 
