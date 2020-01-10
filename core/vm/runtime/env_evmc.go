@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-// +build evmc
+// +build evmc evmone
 
 package runtime
 
@@ -24,6 +24,7 @@ import (
 )
 
 func init() {
+	//vm.InitEVMCEVM("libevmone.so")
 	//vm.InitEVMCEwasm("libhera.so,engine=wabt,benchmark=true,evm1mode=reject")
 	//vm.InitEVMCEwasm("libhera.so,engine=binaryen,benchmark=true,evm1mode=reject")
 	vm.InitEVMCEwasm("libhera.so,engine=wabt,evm1mode=reject")
