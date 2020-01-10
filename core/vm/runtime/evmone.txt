@@ -1,0 +1,6 @@
+goos: linux
+goarch: amd64
+pkg: github.com/ethereum/go-ethereum/core/vm/runtime
+BenchmarkCall-4   	       2	 824258242 ns/op
+PASS
+ok  	github.com/ethereum/go-ethereum/core/vm/runtime	2.497s

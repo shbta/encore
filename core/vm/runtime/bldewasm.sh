@@ -23,9 +23,6 @@ static u32 fib(u32 n) {
 	return fib(n-1)+fib(n-2);
 }
 
-// cpurchase   0xd6960697
-// creceived	0x73fac6f0
-// refund		0x590e1ae3
 static	char	ret[8]={0,0,0,0, 0,0,0,10};
 static	char	ret1[8]={0,0,0,20};
 void main() // __attribute__((export_name("main")))
@@ -33,13 +30,6 @@ void main() // __attribute__((export_name("main")))
 	i32	in_len;
 	if ((in_len=eth_getCallDataSize()) < 4) eth_finish(ret, 8);
 	u32 	met;
-	eth_callDataCopy(&met, 0, 4);
-	switch (__builtin_bswap32(met)) {
-	case 0xd6960697:
-	case 0x73fac6f0:
-	case 0x590e1ae3:
-		eth_finish(ret1,4);
-	}
 	u32 n = 10;
 	if (in_len >= 36) {
 		eth_callDataCopy(&met, 32, 4);
