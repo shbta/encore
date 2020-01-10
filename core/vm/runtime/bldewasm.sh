@@ -24,7 +24,6 @@ static u32 fib(u32 n) {
 }
 
 static	char	ret[8]={0,0,0,0, 0,0,0,10};
-static	char	ret1[8]={0,0,0,20};
 void main() // __attribute__((export_name("main")))
 {
 	i32	in_len;
@@ -36,8 +35,8 @@ void main() // __attribute__((export_name("main")))
 		n = __builtin_bswap32(met);
 	}
 	u32 res = __builtin_bswap32(fib(n));
-	*(u32 *)ret1 = res;
-	eth_finish(ret1,4);
+	*(u32 *)(ret+4) = res;
+	eth_finish(ret,8);
 }
 EOF
 
