@@ -165,12 +165,12 @@ func (b *BlockGen) PrevBlock(index int) *types.Block {
 // associated difficulty. It's useful to test scenarios where forking is not
 // tied to chain length directly.
 func (b *BlockGen) OffsetTime(seconds int64) {
-	b.header.Time += uint64(seconds)
-	if b.header.Time <= b.parent.Header().Time {
+	b.header.TimeMilli += uint64(seconds) * 1000
+	if b.header.Time() <= b.parent.Header().Time() {
 		panic("block time out of range")
 	}
 	chainreader := &fakeChainReader{config: b.config}
-	b.header.Difficulty = b.engine.CalcDifficulty(chainreader, b.header.Time, b.parent.Header())
+	b.header.Difficulty = b.engine.CalcDifficulty(chainreader, b.header.Time(), b.parent.Header())
 }
 
 // GenerateChain creates a chain of n blocks. The first block's
@@ -254,13 +254,13 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 		Coinbase:   parent.Coinbase(),
 		Difficulty: engine.CalcDifficulty(chain, time, &types.Header{
 			Number:     parent.Number(),
-			Time:       time - 10,
+			TimeMilli:  (time - 10) * 1000,
 			Difficulty: parent.Difficulty(),
 			UncleHash:  parent.UncleHash(),
 		}),
-		GasLimit: CalcGasLimit(parent, parent.GasLimit(), parent.GasLimit()),
-		Number:   new(big.Int).Add(parent.Number(), common.Big1),
-		Time:     time,
+		GasLimit:  CalcGasLimit(parent, parent.GasLimit(), parent.GasLimit()),
+		Number:    new(big.Int).Add(parent.Number(), common.Big1),
+		TimeMilli: time * 1000,
 	}
 }
 

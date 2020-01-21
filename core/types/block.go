@@ -79,7 +79,7 @@ type Header struct {
 	Number      *big.Int       `json:"number"           gencodec:"required"`
 	GasLimit    uint64         `json:"gasLimit"         gencodec:"required"`
 	GasUsed     uint64         `json:"gasUsed"          gencodec:"required"`
-	Time        uint64         `json:"timestamp"        gencodec:"required"`
+	TimeMilli   uint64         `json:"timestamp"        gencodec:"required"`
 	Extra       []byte         `json:"extraData"        gencodec:"required"`
 	MixDigest   common.Hash    `json:"mixHash"`
 	Nonce       BlockNonce     `json:"nonce"`
@@ -99,7 +99,9 @@ type headerMarshaling struct {
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
 // RLP encoding.
 func (h *Header) Hash() common.Hash {
-	return rlpHash(h)
+	hh := *h
+	hh.TimeMilli /= 1000
+	return rlpHash(hh)
 }
 
 var headerSize = common.StorageSize(reflect.TypeOf(Header{}).Size())
@@ -108,6 +110,21 @@ var headerSize = common.StorageSize(reflect.TypeOf(Header{}).Size())
 // to approximate and limit the memory consumption of various caches.
 func (h *Header) Size() common.StorageSize {
 	return headerSize + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+h.Number.BitLen())/8)
+}
+
+// Time returns the seconds since epoch 1970/1/1
+func (h *Header) Time() uint64 {
+	return h.TimeMilli / 1000
+}
+
+// TimeMS return milliseconds elapsed since January 1, 19070 UTC.
+func (h *Header) TimeMS() uint64 {
+	return h.TimeMilli
+}
+
+// Nanosecond return nanosecond offset within the second
+func (h *Header) Nanosecond() int64 {
+	return int64(h.TimeMilli%1000) * 1000000
 }
 
 // SanityCheck checks a few basic things -- these checks are way beyond what
@@ -304,7 +321,8 @@ func (b *Block) Number() *big.Int     { return new(big.Int).Set(b.header.Number)
 func (b *Block) GasLimit() uint64     { return b.header.GasLimit }
 func (b *Block) GasUsed() uint64      { return b.header.GasUsed }
 func (b *Block) Difficulty() *big.Int { return new(big.Int).Set(b.header.Difficulty) }
-func (b *Block) Time() uint64         { return b.header.Time }
+func (b *Block) Time() uint64         { return b.header.TimeMilli / 1000 }
+func (b *Block) TimeMilli() uint64    { return b.header.TimeMilli }
 
 func (b *Block) NumberU64() uint64        { return b.header.Number.Uint64() }
 func (b *Block) MixDigest() common.Hash   { return b.header.MixDigest }

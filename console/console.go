@@ -276,13 +276,15 @@ func (c *Console) AutoCompleteInput(line string, pos int) (string, []string, str
 func (c *Console) Welcome() {
 	message := "Welcome to the Geth JavaScript console!\n\n"
 
+	// Encore timestampMS maybe hex
 	// Print some generic Geth metadata
 	if res, err := c.jsre.Run(`
 		var message = "instance: " + web3.version.node + "\n";
 		try {
 			message += "coinbase: " + eth.coinbase + "\n";
 		} catch (err) {}
-		message += "at block: " + eth.blockNumber + " (" + new Date(1000 * eth.getBlock(eth.blockNumber).timestamp) + ")\n";
+		tstamp=(new BigNumber(eth.getBlock(eth.blockNumber).timestampMS.replace('0x',''),16)).toNumber();
+		message += "at block: " + eth.blockNumber + " (" + new Date(tstamp) + ")\n";
 		try {
 			message += " datadir: " + admin.datadir + "\n";
 		} catch (err) {}

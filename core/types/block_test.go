@@ -45,9 +45,11 @@ func TestBlockEncoding(t *testing.T) {
 	check("Coinbase", block.Coinbase(), common.HexToAddress("8888f1f195afa192cfee860698584c030f4c9db1"))
 	check("MixDigest", block.MixDigest(), common.HexToHash("bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff498"))
 	check("Root", block.Root(), common.HexToHash("ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017"))
-	check("Hash", block.Hash(), common.HexToHash("0a5843ac1cb04865017cb35a57b50b07084e5fcee39b5acadade33149f4fff9e"))
+	// Encore, Hash calc Time() of header instead of TimeMilli
+	//check("Hash", block.Hash(), common.HexToHash("0a5843ac1cb04865017cb35a57b50b07084e5fcee39b5acadade33149f4fff9e"))
+	check("Hash", block.Hash(), common.HexToHash("e0b78aaef724132d236f17aaceb6c966ce6c4e7de98d7f7602b028ef14a73713"))
 	check("Nonce", block.Nonce(), uint64(0xa13a5a8c8f2bb1c4))
-	check("Time", block.Time(), uint64(1426516743))
+	check("Time", block.TimeMilli(), uint64(1426516743))
 	check("Size", block.Size(), common.StorageSize(len(blockEnc)))
 
 	tx1 := NewTransaction(0, common.HexToAddress("095e7baea6a6c7c4c2dfeb977efac326af552d87"), big.NewInt(10), 50000, big.NewInt(10), nil)

@@ -1016,6 +1016,7 @@ func FormatLogs(logs []vm.StructLog) []StructLogRes {
 
 // RPCMarshalHeader converts the given header to the RPC output .
 func RPCMarshalHeader(head *types.Header) map[string]interface{} {
+	// Encore, RPC timestamp seconds still
 	return map[string]interface{}{
 		"number":           (*hexutil.Big)(head.Number),
 		"hash":             head.Hash(),
@@ -1031,7 +1032,8 @@ func RPCMarshalHeader(head *types.Header) map[string]interface{} {
 		"size":             hexutil.Uint64(head.Size()),
 		"gasLimit":         hexutil.Uint64(head.GasLimit),
 		"gasUsed":          hexutil.Uint64(head.GasUsed),
-		"timestamp":        hexutil.Uint64(head.Time),
+		"timestamp":        hexutil.Uint64(head.TimeMilli / 1000),
+		"timestampMS":      hexutil.Uint64(head.TimeMilli),
 		"transactionsRoot": head.TxHash,
 		"receiptsRoot":     head.ReceiptHash,
 	}

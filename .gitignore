@@ -19,6 +19,8 @@ build/_vendor/pkg
 .#*
 *#
 *~
+*.orig
+*.rej
 .project
 .settings
 

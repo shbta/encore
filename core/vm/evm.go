@@ -17,12 +17,14 @@
 package vm
 
 import (
+	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 )
 
@@ -432,6 +434,8 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 		if contract.UseGas(createDataGas) {
 			evm.StateDB.SetCode(address, ret)
 		} else {
+			log.Debug(fmt.Sprintf("create contract out of gas, UseGas: %d/%d, len: %d",
+				createDataGas, gas, len(ret)))
 			err = ErrCodeStoreOutOfGas
 		}
 	}

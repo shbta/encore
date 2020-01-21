@@ -28,6 +28,7 @@ func (h Header) MarshalJSON() ([]byte, error) {
 		GasLimit    hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed     hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        hexutil.Uint64 `json:"timestamp"        gencodec:"required"`
+		TimeMilli   hexutil.Uint64 `json:"timestampMS"`
 		Extra       hexutil.Bytes  `json:"extraData"        gencodec:"required"`
 		MixDigest   common.Hash    `json:"mixHash"`
 		Nonce       BlockNonce     `json:"nonce"`
@@ -45,7 +46,8 @@ func (h Header) MarshalJSON() ([]byte, error) {
 	enc.Number = (*hexutil.Big)(h.Number)
 	enc.GasLimit = hexutil.Uint64(h.GasLimit)
 	enc.GasUsed = hexutil.Uint64(h.GasUsed)
-	enc.Time = hexutil.Uint64(h.Time)
+	enc.Time = hexutil.Uint64(h.TimeMilli / 1000)
+	enc.TimeMilli = hexutil.Uint64(h.TimeMilli)
 	enc.Extra = h.Extra
 	enc.MixDigest = h.MixDigest
 	enc.Nonce = h.Nonce
@@ -68,6 +70,7 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		GasLimit    *hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed     *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Uint64 `json:"timestamp"        gencodec:"required"`
+		TimeMilli   *hexutil.Uint64 `json:"timestampMS"`
 		Extra       *hexutil.Bytes  `json:"extraData"        gencodec:"required"`
 		MixDigest   *common.Hash    `json:"mixHash"`
 		Nonce       *BlockNonce     `json:"nonce"`
@@ -120,10 +123,14 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'gasUsed' for Header")
 	}
 	h.GasUsed = uint64(*dec.GasUsed)
-	if dec.Time == nil {
-		return errors.New("missing required field 'timestamp' for Header")
+	if dec.TimeMilli != nil {
+		h.TimeMilli = uint64(*dec.TimeMilli)
+	} else {
+		if dec.Time == nil {
+			return errors.New("missing required field 'timestamp' for Header")
+		}
+		h.TimeMilli = uint64(*dec.Time) * 1000
 	}
-	h.Time = uint64(*dec.Time)
 	if dec.Extra == nil {
 		return errors.New("missing required field 'extraData' for Header")
 	}

@@ -465,7 +465,7 @@ func (api *RetestethAPI) mineBlock() error {
 		Number:     big.NewInt(int64(api.blockNumber + 1)),
 		GasLimit:   gasLimit,
 		Extra:      api.extraData,
-		Time:       timestamp,
+		TimeMilli:  timestamp * 1000,
 	}
 	header.Coinbase = api.author
 	if api.engine != nil {

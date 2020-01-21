@@ -249,7 +249,7 @@ func (c *Clique) verifyHeader(chain consensus.ChainReader, header *types.Header,
 	number := header.Number.Uint64()
 
 	// Don't waste time checking blocks from the future
-	if header.Time > uint64(time.Now().Unix()) {
+	if header.Time() > uint64(time.Now().Unix()) {
 		return consensus.ErrFutureBlock
 	}
 	// Checkpoint blocks need to enforce zero beneficiary
@@ -321,7 +321,7 @@ func (c *Clique) verifyCascadingFields(chain consensus.ChainReader, header *type
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
 		return consensus.ErrUnknownAncestor
 	}
-	if parent.Time+c.config.Period > header.Time {
+	if parent.Time()+c.config.Period > header.Time() {
 		return ErrInvalidTimestamp
 	}
 	// Retrieve the snapshot needed to verify this header and cache it
@@ -543,10 +543,14 @@ func (c *Clique) Prepare(chain consensus.ChainReader, header *types.Header) erro
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	header.Time = parent.Time + c.config.Period
-	if header.Time < uint64(time.Now().Unix()) {
-		header.Time = uint64(time.Now().Unix())
+	// Encore
+	header.TimeMilli = (parent.Time() + c.config.Period) * 1000
+	tNow := time.Now()
+	if header.Time() < uint64(tNow.Unix()) {
+		header.TimeMilli = uint64(tNow.Unix()) * 1000
 	}
+	header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
+	// End Encore
 	return nil
 }
 
@@ -618,7 +622,7 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 		}
 	}
 	// Sweet, the protocol permits us to sign the block, wait for our time
-	delay := time.Unix(int64(header.Time), 0).Sub(time.Now()) // nolint: gosimple
+	delay := time.Unix(int64(header.Time()), 0).Sub(time.Now()) // nolint: gosimple
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
 		// It's not our turn explicitly to sign, delay it a bit
 		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
@@ -715,6 +719,7 @@ func CliqueRLP(header *types.Header) []byte {
 }
 
 func encodeSigHeader(w io.Writer, header *types.Header) {
+	// use Time() for hasher instead of TimeMilli, Encore
 	err := rlp.Encode(w, []interface{}{
 		header.ParentHash,
 		header.UncleHash,
@@ -727,7 +732,7 @@ func encodeSigHeader(w io.Writer, header *types.Header) {
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
-		header.Time,
+		header.Time(),
 		header.Extra[:len(header.Extra)-crypto.SignatureLength], // Yes, this will panic if extra is too short
 		header.MixDigest,
 		header.Nonce,
