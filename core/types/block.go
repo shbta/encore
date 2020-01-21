@@ -101,7 +101,7 @@ type headerMarshaling struct {
 func (h *Header) Hash() common.Hash {
 	hh := *h
 	hh.TimeMilli /= 1000
-	return rlpHash(hh)
+	return rlpHash(&hh)
 }
 
 var headerSize = common.StorageSize(reflect.TypeOf(Header{}).Size())

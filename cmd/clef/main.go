@@ -771,7 +771,7 @@ func testExternalUI(api *core.SignerAPI) {
 			Number:      big.NewInt(1337),
 			GasLimit:    1338,
 			GasUsed:     1338,
-			Time:        1338,
+			TimeMilli:   1338000,
 			Extra:       []byte("Extra data Extra data Extra data  Extra data  Extra data  Extra data  Extra data Extra data"),
 			MixDigest:   common.HexToHash("0x0000H45H"),
 		}
