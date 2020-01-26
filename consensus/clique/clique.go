@@ -321,7 +321,10 @@ func (c *Clique) verifyCascadingFields(chain consensus.ChainReader, header *type
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
 		return consensus.ErrUnknownAncestor
 	}
-	if parent.Time()+c.config.Period > header.Time() {
+	// Encore
+	// blocks may mined within same second
+	//if parent.Time()+c.config.Period > header.Time() {
+	if parent.TimeMilli > header.TimeMilli {
 		return ErrInvalidTimestamp
 	}
 	// Retrieve the snapshot needed to verify this header and cache it
@@ -464,6 +467,8 @@ func (c *Clique) verifySeal(chain consensus.ChainReader, header *types.Header, p
 	if _, ok := snap.Signers[signer]; !ok {
 		return errUnauthorizedSigner
 	}
+	// Encore
+	// limit should be small for better performance
 	for seen, recent := range snap.Recents {
 		if recent == signer {
 			// Signer is among recents, only fail if the current block doesn't shift it out
@@ -629,6 +634,15 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 		delay += time.Duration(rand.Int63n(int64(wiggle)))
 
 		log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+	} else {
+		// Encore
+		// if there is any TXs, update timestamp of header and mine right now
+		if len(block.Transactions()) > 0 {
+			tNow := time.Now()
+			delay = time.Millisecond
+			header.TimeMilli = uint64(tNow.Unix()) * 1000
+			header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
+		}
 	}
 	// Sign all the things!
 	sighash, err := signFn(accounts.Account{Address: signer}, accounts.MimetypeClique, CliqueRLP(header))
