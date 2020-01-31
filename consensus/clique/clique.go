@@ -49,6 +49,7 @@ const (
 	inmemorySignatures = 4096 // Number of recent block signatures to keep in memory
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
+	maxSigners = 5                      // next 13,21?
 )
 
 // Clique proof-of-authority protocol constants.
@@ -616,6 +617,7 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 	if _, authorized := snap.Signers[signer]; !authorized {
 		return errUnauthorizedSigner
 	}
+	// Encore, limit snap.Signers
 	// If we're amongst the recent signers, wait for the next block
 	for seen, recent := range snap.Recents {
 		if recent == signer {
