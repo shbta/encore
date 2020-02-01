@@ -636,9 +636,11 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 		if delay <= 0 && number > 1 {
 			delay = 100 * time.Millisecond
 			log.Info("Out-of-turn seal signed block, wait 100ms")
-		} else if len(block.Transactions()) > 0 {
-			delay = 300 * time.Millisecond
-			log.Info("Out-of-turn seal w/ TXs, wait 300ms")
+			/*
+				} else if len(block.Transactions()) > 0 {
+					delay = 300 * time.Millisecond
+					log.Info("Out-of-turn seal w/ TXs, wait 300ms")
+			*/
 		} else {
 			// It's not our turn explicitly to sign, delay it a bit
 			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
