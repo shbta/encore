@@ -630,20 +630,33 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 	}
 	// Sweet, the protocol permits us to sign the block, wait for our time
 	delay := time.Unix(int64(header.Time()), 0).Sub(time.Now()) // nolint: gosimple
+	// Encore
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
-		// It's not our turn explicitly to sign, delay it a bit
-		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
-		delay += time.Duration(rand.Int63n(int64(wiggle)))
+		// Encore, compare TimeMilli and timestamp even better
+		if delay <= 0 && number > 1 {
+			delay = 100 * time.Millisecond
+			log.Info("Out-of-turn seal signed block, wait 100ms")
+		} else if len(block.Transactions()) > 0 {
+			delay = 300 * time.Millisecond
+			log.Info("Out-of-turn seal w/ TXs, wait 300ms")
+		} else {
+			// It's not our turn explicitly to sign, delay it a bit
+			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
+			delay += time.Duration(rand.Int63n(int64(wiggle)))
 
-		log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
+			// Trace -> Info
+			log.Trace("Out-of-turn signing requested", "wiggle",
+				common.PrettyDuration(wiggle))
+		}
 	} else {
 		// Encore
 		// if there is any TXs, update timestamp of header and mine right now
 		if len(block.Transactions()) > 0 {
-			tNow := time.Now()
+			//tNow := time.Now()
 			delay = time.Millisecond
-			header.TimeMilli = uint64(tNow.Unix()) * 1000
-			header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
+			//header.TimeMilli = uint64(tNow.Unix()) * 1000
+			//header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
+			log.Info("In-turn w/ TXs, only wait 1ms")
 		}
 	}
 	// Sign all the things!

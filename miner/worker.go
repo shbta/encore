@@ -363,6 +363,8 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 					timer.Reset(recommit)
 					continue
 				}
+				// Encore
+				//timestamp = time.Now().Unix()
 				commit(true, commitInterruptResubmit)
 			}
 
@@ -410,6 +412,10 @@ func (w *worker) mainLoop() {
 	for {
 		select {
 		case req := <-w.newWorkCh:
+			// Encore
+			if req.timestamp > time.Now().Unix() {
+				req.timestamp = time.Now().Unix()
+			}
 			w.commitNewWork(req.interrupt, req.noempty, req.timestamp)
 
 		case ev := <-w.chainSideCh:
@@ -572,6 +578,15 @@ func (w *worker) resultLoop() {
 			if !exist {
 				log.Error("Block found but no relative pending task", "number", block.Number(), "sealhash", sealhash, "hash", hash)
 				continue
+			}
+			// Encore, verify timestamp of header
+			header := block.Header()
+			tNow := time.Now()
+			tstamp := uint64(tNow.Unix()) * 1000
+			tstamp += uint64(tNow.Nanosecond() / 1000000)
+			if header.TimeMilli > tstamp {
+				header.TimeMilli = tstamp
+
 			}
 			// Different block could share same sealhash, deep copy here to prevent write-write conflict.
 			var (
@@ -831,7 +846,8 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64) 
 	tstart := time.Now()
 	parent := w.chain.CurrentBlock()
 
-	if parent.Time() >= uint64(timestamp) {
+	// Encore
+	if w.chainConfig.Clique == nil && parent.Time() >= uint64(timestamp) {
 		timestamp = int64(parent.Time() + 1)
 	}
 	// this will ensure we're not going off too far in the future
