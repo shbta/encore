@@ -633,23 +633,17 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 	// Encore
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
 		// Encore, compare TimeMilli and timestamp even better
-		if delay <= 0 && number > 1 {
+		if c.config.Period != 0 && len(block.Transactions()) > 0 {
 			delay = 100 * time.Millisecond
-			log.Info("Out-of-turn seal signed block, wait 100ms")
-			/*
-				} else if len(block.Transactions()) > 0 {
-					delay = 300 * time.Millisecond
-					log.Info("Out-of-turn seal w/ TXs, wait 300ms")
-			*/
-		} else {
-			// It's not our turn explicitly to sign, delay it a bit
-			wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
-			delay += time.Duration(rand.Int63n(int64(wiggle)))
-
-			// Trace -> Info
-			log.Trace("Out-of-turn signing requested", "wiggle",
-				common.PrettyDuration(wiggle))
+			log.Info("Out-of-turn seal w/ TXs, wait wiggleTime plus 100ms")
 		}
+		// It's not our turn explicitly to sign, delay it a bit
+		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
+		delay += time.Duration(rand.Int63n(int64(wiggle)))
+
+		// Trace -> Info
+		log.Trace("Out-of-turn signing requested", "wiggle",
+			common.PrettyDuration(wiggle))
 	} else {
 		// Encore
 		// if there is any TXs, update timestamp of header and mine right now
