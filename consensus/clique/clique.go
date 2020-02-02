@@ -251,6 +251,8 @@ func (c *Clique) verifyHeader(chain consensus.ChainReader, header *types.Header,
 
 	// Don't waste time checking blocks from the future
 	if header.Time() > uint64(time.Now().Unix()) {
+		// Encore
+		log.Debug("clique verify future block", "number", number)
 		return consensus.ErrFutureBlock
 	}
 	// Checkpoint blocks need to enforce zero beneficiary
@@ -320,6 +322,11 @@ func (c *Clique) verifyCascadingFields(chain consensus.ChainReader, header *type
 		parent = chain.GetHeader(header.ParentHash, number-1)
 	}
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
+		// Encore
+		if parent != nil {
+			log.Debug("clique UnknowAncestor block", "number", number, "number",
+				parent.Number.Uint64())
+		}
 		return consensus.ErrUnknownAncestor
 	}
 	// Encore
@@ -553,9 +560,10 @@ func (c *Clique) Prepare(chain consensus.ChainReader, header *types.Header) erro
 	header.TimeMilli = (parent.Time() + c.config.Period) * 1000
 	tNow := time.Now()
 	if header.Time() < uint64(tNow.Unix()) {
-		header.TimeMilli = uint64(tNow.Unix()) * 1000
+		header.TimeMilli = uint64(tNow.Unix()+1) * 1000
 	}
-	header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
+	// only in-turn w/ milli second
+	//header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
 	// End Encore
 	return nil
 }
@@ -633,9 +641,13 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 	// Encore
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
 		// Encore, compare TimeMilli and timestamp even better
-		if c.config.Period != 0 && len(block.Transactions()) > 0 {
-			delay = 100 * time.Millisecond
-			log.Info("Out-of-turn seal w/ TXs, wait wiggleTime plus 100ms")
+		//if len(block.Transactions()) == 0 { return nil }
+		//if c.config.Period != 0 && len(block.Transactions()) > 0 {
+		//delay = 100 * time.Millisecond
+		//log.Info("Out-of-turn seal w/ TXs, wait wiggleTime plus 100ms")
+		//}
+		if delay < time.Second {
+			delay = time.Second
 		}
 		// It's not our turn explicitly to sign, delay it a bit
 		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime

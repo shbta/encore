@@ -364,7 +364,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 					continue
 				}
 				// Encore
-				//timestamp = time.Now().Unix()
+				timestamp = time.Now().Unix()
 				commit(true, commitInterruptResubmit)
 			}
 
@@ -528,6 +528,15 @@ func (w *worker) taskLoop() {
 			if w.newTaskHook != nil {
 				w.newTaskHook(task)
 			}
+			// Encore
+			if w.chainConfig.Clique != nil && len(task.block.Transactions()) > 0 {
+				tNow := time.Now()
+				tstamp := uint64(tNow.Unix() * 1000)
+				tstamp += uint64(tNow.Nanosecond() / 1000000)
+				task.block.UpdateTimeMilli(tstamp)
+				log.Debug("Encore update timestamp for cliquew/ TXs", "number",
+					task.block.Header().TimeMilli)
+			}
 			// Reject duplicate sealing work due to resubmitting.
 			sealHash := w.engine.SealHash(task.block.Header())
 			if sealHash == prev {
@@ -546,6 +555,9 @@ func (w *worker) taskLoop() {
 
 			if err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
 				log.Warn("Block sealing failed", "err", err)
+			} else {
+				log.Debug("Encore Successful Seal timestamp", "number",
+					task.block.Header().TimeMilli)
 			}
 		case <-w.exitCh:
 			interrupt()
@@ -580,14 +592,14 @@ func (w *worker) resultLoop() {
 				continue
 			}
 			// Encore, verify timestamp of header
-			header := block.Header()
-			tNow := time.Now()
-			tstamp := uint64(tNow.Unix()) * 1000
-			tstamp += uint64(tNow.Nanosecond() / 1000000)
-			if header.TimeMilli > tstamp {
-				header.TimeMilli = tstamp
+			//header := block.Header()
+			//tNow := time.Now()
+			//tstamp := uint64(tNow.Unix()) * 1000
+			//tstamp += uint64(tNow.Nanosecond() / 1000000)
+			//if header.TimeMilli > tstamp {
+			//header.TimeMilli = tstamp
 
-			}
+			//}
 			// Different block could share same sealhash, deep copy here to prevent write-write conflict.
 			var (
 				receipts = make([]*types.Receipt, len(task.receipts))
@@ -846,9 +858,9 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64) 
 	tstart := time.Now()
 	parent := w.chain.CurrentBlock()
 
-	// Encore
-	if w.chainConfig.Clique == nil && parent.Time() >= uint64(timestamp) {
-		timestamp = int64(parent.Time() + 1)
+	// Encore, Raft could mine blocks in a second
+	if parent.Time() >= uint64(timestamp) {
+		timestamp = int64(parent.Time())
 	}
 	// this will ensure we're not going off too far in the future
 	if now := time.Now().Unix(); timestamp > now+1 {

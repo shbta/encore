@@ -359,6 +359,11 @@ func (b *Block) SanityCheck() error {
 	return b.header.SanityCheck()
 }
 
+// Encore
+func (b *Block) UpdateTimeMilli(tstamp uint64) {
+	b.header.TimeMilli = tstamp
+}
+
 type writeCounter common.StorageSize
 
 func (c *writeCounter) Write(b []byte) (int, error) {
