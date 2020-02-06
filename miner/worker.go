@@ -555,9 +555,6 @@ func (w *worker) taskLoop() {
 
 			if err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
 				log.Warn("Block sealing failed", "err", err)
-			} else {
-				log.Debug("Encore Successful Seal timestamp", "number",
-					task.block.Header().TimeMilli)
 			}
 		case <-w.exitCh:
 			interrupt()

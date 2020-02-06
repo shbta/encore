@@ -252,7 +252,7 @@ func (c *Clique) verifyHeader(chain consensus.ChainReader, header *types.Header,
 	// Don't waste time checking blocks from the future
 	if header.Time() > uint64(time.Now().Unix()) {
 		// Encore
-		log.Debug("clique verify future block", "number", number)
+		//log.Debug("clique verify future block", "number", number)
 		return consensus.ErrFutureBlock
 	}
 	// Checkpoint blocks need to enforce zero beneficiary
@@ -322,11 +322,6 @@ func (c *Clique) verifyCascadingFields(chain consensus.ChainReader, header *type
 		parent = chain.GetHeader(header.ParentHash, number-1)
 	}
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
-		// Encore
-		if parent != nil {
-			log.Debug("clique UnknowAncestor block", "number", number, "number",
-				parent.Number.Uint64())
-		}
 		return consensus.ErrUnknownAncestor
 	}
 	// Encore
@@ -653,9 +648,7 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 		wiggle := time.Duration(len(snap.Signers)/2+1) * wiggleTime
 		delay += time.Duration(rand.Int63n(int64(wiggle)))
 
-		// Trace -> Info
-		log.Trace("Out-of-turn signing requested", "wiggle",
-			common.PrettyDuration(wiggle))
+		log.Trace("Out-of-turn signing requested", "wiggle", common.PrettyDuration(wiggle))
 	} else {
 		// Encore
 		// if there is any TXs, update timestamp of header and mine right now
