@@ -1,0 +1,7 @@
+test execute EWASM file Len: 417
+goos: linux
+goarch: amd64
+pkg: github.com/ethereum/go-ethereum/core/vm/runtime
+BenchmarkCall-4   	      12	  98168814 ns/op
+PASS
+ok  	github.com/ethereum/go-ethereum/core/vm/runtime	1.300s
