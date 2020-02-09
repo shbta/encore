@@ -70,7 +70,7 @@ func (h *Header) UnmarshalJSON(input []byte) error {
 		GasLimit    *hexutil.Uint64 `json:"gasLimit"         gencodec:"required"`
 		GasUsed     *hexutil.Uint64 `json:"gasUsed"          gencodec:"required"`
 		Time        *hexutil.Uint64 `json:"timestamp"        gencodec:"required"`
-		TimeMilli   *hexutil.Uint64 `json:"timestampMS"`
+		TimeMilli   *hexutil.Uint64 `json:"timestampMS,omitempty"`
 		Extra       *hexutil.Bytes  `json:"extraData"        gencodec:"required"`
 		MixDigest   *common.Hash    `json:"mixHash"`
 		Nonce       *BlockNonce     `json:"nonce"`

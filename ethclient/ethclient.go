@@ -517,6 +517,23 @@ func (ec *Client) SendTransaction(ctx context.Context, tx *types.Transaction) er
 	return ec.c.CallContext(ctx, nil, "eth_sendRawTransaction", hexutil.Encode(data))
 }
 
+// SignSendTransaction sign a unsigned transaction and injects into the pending pool for execution.
+//
+// If the transaction was a contract creation use the TransactionReceipt method to get the
+// contract address after the transaction has been mined.
+func (ec *Client) SignSendTransaction(ctx context.Context, msg *ethereum.CallMsg) (*common.Hash, error) {
+	var r *common.Hash
+	err := ec.c.CallContext(ctx, &r, "eth_sendTransaction", toCallArg(*msg))
+	return r, err
+}
+
+// Accounts return accounts of node
+func (ec *Client) Accounts(ctx context.Context) ([]*common.Address, error) {
+	var r []*common.Address
+	err := ec.c.CallContext(ctx, &r, "eth_accounts")
+	return r, err
+}
+
 func toCallArg(msg ethereum.CallMsg) interface{} {
 	arg := map[string]interface{}{
 		"from": msg.From,
