@@ -13,6 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+func calcETH(v *big.Int) float64 {
+	r := v.Div(v, big.NewInt(1e14))
+	return float64(r.Int64()) / 10000.0
+}
+
 func main() {
 	ipcPath := os.Getenv("HOME") + "/testebc/data1/geth.ipc"
 	fmt.Println("IPC attach", ipcPath)
@@ -37,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = bal
+	fmt.Println("Before trans balance:", calcETH(bal))
 
 	value := big.NewInt(8000000000000000000) // in wei (8 eth)
 	gasLimit := uint64(21000)                // in units
@@ -75,6 +80,9 @@ func main() {
 				break
 			}
 		}
+	}
+	if bal, err := client.BalanceAt(ctx, *fromAddress, nil); err == nil {
+		fmt.Println("After trans balance:", calcETH(bal))
 	}
 
 }
