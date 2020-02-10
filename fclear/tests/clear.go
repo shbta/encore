@@ -30,6 +30,30 @@ var accounts []*common.Address
 var contractAddr common.Address
 var ctx context.Context
 
+func clearName() string {
+	var clearBytes []byte
+	if cBytes, err := clearABI.Pack("name"); err != nil {
+		log.Fatal(err)
+	} else {
+		clearBytes = cBytes
+	}
+	tx := ethereum.CallMsg{
+		From: *accounts[0],
+		To:   &contractAddr,
+		Data: clearBytes,
+	}
+	var rr string
+	if res, err := client.CallContract(ctx, tx, nil); err != nil {
+		log.Fatal(err)
+	} else if err = clearABI.Unpack(&rr, "name", res); err != nil {
+		log.Fatal(err)
+	}
+	if rr[:4] != "SHFE" {
+		log.Fatal("contract address may be wrong")
+	}
+	return rr
+}
+
 func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBuy bool) (*common.Hash, error) {
 	var clearBytes []byte
 	if cBytes, err := clearABI.Pack("dealClearing", clt, qty, price, sym, member, isOff, isBuy); err != nil {
@@ -113,6 +137,7 @@ func main() {
 	} else {
 		fmt.Println("Before dealClear balance:", calcETH(bal))
 	}
+	fmt.Println("Clear contract name:", clearName())
 
 	var blockS uint64
 	if hh, err := client.HeaderByNumber(ctx, nil); err == nil && hh.Number != nil {
