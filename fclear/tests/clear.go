@@ -37,8 +37,8 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	} else {
 		clearBytes = cBytes
 	}
-	// cost about 45569 gas
-	gasLimit := uint64(64000) // in units
+	// cost about 22680 gas
+	gasLimit := uint64(32000) // in units
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -141,6 +141,9 @@ func main() {
 				ms := t2.Sub(t1).Milliseconds()
 				nSec = float64(ms) / 1000.0
 				fmt.Printf("... done, cost %d ms\n", ms)
+				if tr, err := client.TransactionReceipt(ctx, *hash); err == nil {
+					fmt.Printf("%d Gas used per call\n", tr.GasUsed)
+				}
 				fmt.Printf("%.3f calls per second\n", float64(count)/nSec)
 			}
 			break
