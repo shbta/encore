@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"math/big"
@@ -36,7 +37,8 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	} else {
 		clearBytes = cBytes
 	}
-	gasLimit := uint64(2100000) // in units
+	// cost about 45569 gas
+	gasLimit := uint64(64000) // in units
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +57,23 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	return hash, err
 }
 
+func TimeMs2String(ms uint64) string {
+	sec := int64(ms / 1000)
+	ns := int64(ms%1000) * 1000000
+	tt := time.Unix(sec, ns)
+	return tt.Format("2006-01-02 15:04:05.000Z07:00")
+}
+
 func main() {
+	var count int
+	flag.IntVar(&count, "count", 1000, "number of contract calls")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
+		flag.PrintDefaults()
+		os.Exit(2)
+	}
+	flag.Parse()
+
 	ipcPath := os.Getenv("HOME") + "/testebc/data1/geth.ipc"
 	fmt.Println("IPC attach", ipcPath)
 	if clt, err := ethclient.Dial(ipcPath); err != nil {
@@ -88,11 +106,17 @@ func main() {
 
 	//toAddress := common.HexToAddress("0x9bf382bea61312c51ad8d31d42a24ac4f704a648")
 
+	var blockS uint64
+	if hh, err := client.HeaderByNumber(ctx, nil); err == nil && hh.Number != nil {
+		blockS = hh.Number.Uint64()
+		fmt.Printf("block %d %s before call\n", blockS, TimeMs2String(hh.TimeMilli))
+	}
 	t1 := time.Now()
 	rand.Seed(t1.Unix())
+	var nSec float64
 	var t2 time.Time
 	var hash *common.Hash
-	for i := 0; i < 10; i++ {
+	for i := 0; i < count; i++ {
 		clt := uint32(1000 + i%4)
 		qty := uint32(1 + rand.Int31n(200))
 		prc := uint64(53000 + 100*rand.Int31n(30))
@@ -109,15 +133,25 @@ func main() {
 	for {
 		_, isPend, _ := client.TransactionByHash(context.Background(), *hash)
 		t2 = time.Now()
-		if !isPend || t2.Sub(t1) > 5*time.Second {
+		if !isPend || t2.Sub(t1) > 30*time.Second {
 			fmt.Printf("last tx sent: %s", hash.Hex())
 			if isPend {
 				fmt.Println("... timeout")
 			} else {
-				fmt.Printf("... done, cost %d ms\n", t2.Sub(t1).Milliseconds())
+				ms := t2.Sub(t1).Milliseconds()
+				nSec = float64(ms) / 1000.0
+				fmt.Printf("... done, cost %d ms\n", ms)
+				fmt.Printf("%.3f calls per second\n", float64(count)/nSec)
 			}
 			break
 		}
+	}
+	if hh, err := client.HeaderByNumber(ctx, nil); err == nil && hh.Number != nil {
+		blockE := hh.Number.Uint64()
+		fmt.Printf("block %d %s after call\n", blockE, TimeMs2String(hh.TimeMilli))
+		fmt.Printf("mined %.2f blocks per second\n", float64(blockE-blockS)/nSec)
+		nBlk := int(blockE - blockS)
+		fmt.Printf("%d contract calls per block\n", 1000/nBlk)
 	}
 	if bal, err := client.BalanceAt(ctx, *fromAddress, nil); err == nil {
 		fmt.Println("After dealClear balance:", calcETH(bal))
