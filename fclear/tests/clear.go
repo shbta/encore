@@ -37,8 +37,8 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	} else {
 		clearBytes = cBytes
 	}
-	// cost about 22680 gas
-	gasLimit := uint64(32000) // in units
+	// cost about 30469 gas
+	gasLimit := uint64(40000) // in units
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -66,7 +66,11 @@ func TimeMs2String(ms uint64) string {
 
 func main() {
 	var count int
+	var dataDir string
+	var ctAddr string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
+	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
+	flag.StringVar(&ctAddr, "contract", "0xf5704f03B4e5833AF156B768aCf76Af6491E258D", "Address of Clearing contract")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
 		flag.PrintDefaults()
@@ -74,7 +78,12 @@ func main() {
 	}
 	flag.Parse()
 
-	ipcPath := os.Getenv("HOME") + "/testebc/data1/geth.ipc"
+	var ipcPath string
+	if len(dataDir) > 0 && dataDir[0] == '~' {
+		ipcPath = os.Getenv("HOME") + dataDir[1:] + "/geth.ipc"
+	} else {
+		ipcPath = dataDir + "/geth.ipc"
+	}
 	fmt.Println("IPC attach", ipcPath)
 	if clt, err := ethclient.Dial(ipcPath); err != nil {
 		log.Fatal(err)
@@ -87,6 +96,7 @@ func main() {
 		clearABI = cABI
 	}
 
+	contractAddr = common.HexToAddress(ctAddr)
 	ctx = context.Background()
 	if acct, err := client.Accounts(ctx); err != nil {
 		log.Fatal(err)
@@ -103,8 +113,6 @@ func main() {
 	} else {
 		fmt.Println("Before dealClear balance:", calcETH(bal))
 	}
-
-	//toAddress := common.HexToAddress("0x9bf382bea61312c51ad8d31d42a24ac4f704a648")
 
 	var blockS uint64
 	if hh, err := client.HeaderByNumber(ctx, nil); err == nil && hh.Number != nil {
