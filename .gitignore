@@ -23,6 +23,7 @@ build/_vendor/pkg
 *.rej
 .project
 .settings
+*.wasm
 
 # used by the Makefile
 /build/_workspace/
