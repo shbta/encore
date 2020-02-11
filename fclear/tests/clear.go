@@ -30,7 +30,7 @@ var accounts []*common.Address
 var contractAddr common.Address
 var ctx context.Context
 
-func clearName() string {
+func clearName() (ret string) {
 	var clearBytes []byte
 	if cBytes, err := clearABI.Pack("name"); err != nil {
 		log.Fatal(err)
@@ -42,16 +42,44 @@ func clearName() string {
 		To:   &contractAddr,
 		Data: clearBytes,
 	}
-	var rr string
+	var rr interface{}
 	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Fatal(err)
 	} else if err = clearABI.Unpack(&rr, "name", res); err != nil {
 		log.Fatal(err)
 	}
-	if rr[:4] != "SHFE" {
+	if res, ok := rr.(string); !ok {
+		log.Fatal("type of return mismatch")
+	} else if res != "SHFE" {
 		log.Fatal("contract address may be wrong")
+	} else {
+		ret = res
 	}
-	return rr
+	return
+}
+
+func getClientPosition(clt uint32, sym, member uint16) (nLong, nShort uint32) {
+	var clearBytes []byte
+	if cBytes, err := clearABI.Pack("getClientPosition", clt, sym, member); err != nil {
+		log.Fatal(err)
+	} else {
+		clearBytes = cBytes
+	}
+	tx := ethereum.CallMsg{
+		From: *accounts[0],
+		To:   &contractAddr,
+		Data: clearBytes,
+	}
+	var rr [2]interface{}
+	if res, err := client.CallContract(ctx, tx, nil); err != nil {
+		log.Fatal(err)
+	} else if err = clearABI.Unpack(&rr, "getClientPosition", res); err != nil {
+		log.Fatal(err, "res:", res)
+	} else {
+		nLong = rr[0].(uint32)
+		nShort = rr[1].(uint32)
+	}
+	return
 }
 
 func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBuy bool) (*common.Hash, error) {
@@ -62,7 +90,7 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 		clearBytes = cBytes
 	}
 	// cost about 30469 gas
-	gasLimit := uint64(40000) // in units
+	gasLimit := uint64(60000) // in units
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +122,7 @@ func main() {
 	var ctAddr string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
-	flag.StringVar(&ctAddr, "contract", "0xf5704f03B4e5833AF156B768aCf76Af6491E258D", "Address of Clearing contract")
+	flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
 		flag.PrintDefaults()
@@ -149,12 +177,13 @@ func main() {
 	var nSec float64
 	var t2 time.Time
 	var hash *common.Hash
+	var clt uint32
+	memb := uint16(101)
 	for i := 0; i < count; i++ {
-		clt := uint32(1000 + i%4)
+		clt = uint32(1000 + i%4)
 		qty := uint32(1 + rand.Int31n(200))
 		prc := uint64(53000 + 100*rand.Int31n(30))
-		memb := uint16(101)
-		bOff := false
+		bOff := (i & 1) == 0
 		bBuy := (qty & 1) != 0
 		if h, err := dealClearing(clt, qty, prc, 1, memb, bOff, bBuy); err != nil {
 			log.Fatal("dealClearing failed", err)
@@ -192,5 +221,6 @@ func main() {
 	if bal, err := client.BalanceAt(ctx, *fromAddress, nil); err == nil {
 		fmt.Println("After dealClear balance:", calcETH(bal))
 	}
-
+	nL, nS := getClientPosition(clt, 1, memb)
+	fmt.Printf("client %d position: %d long, %d short\n", clt, nL, nS)
 }
