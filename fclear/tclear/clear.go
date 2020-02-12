@@ -13,6 +13,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -50,7 +51,7 @@ func clearName() (ret string) {
 	}
 	if res, ok := rr.(string); !ok {
 		log.Fatal("type of return mismatch")
-	} else if res != "SHFE" {
+	} else if res != "SHFE Clear" {
 		log.Fatal("contract address may be wrong")
 	} else {
 		ret = res
@@ -120,9 +121,11 @@ func main() {
 	var count int
 	var dataDir string
 	var ctAddr string
+	var dumpABI bool
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
 	flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
+	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
 		flag.PrintDefaults()
@@ -130,6 +133,18 @@ func main() {
 	}
 	flag.Parse()
 
+	if cABI, err := abi.JSON(strings.NewReader(clearDef)); err != nil {
+		log.Fatal("abi.JSON", err)
+	} else {
+		clearABI = cABI
+	}
+	if dumpABI {
+		for _, ab := range clearABI.Methods {
+			fmt.Printf("Method %s Id: %s, Sig: %s\n", ab.Name,
+				common.ToHex(ab.ID()), ab.Sig())
+		}
+		os.Exit(0)
+	}
 	var ipcPath string
 	if len(dataDir) > 0 && dataDir[0] == '~' {
 		ipcPath = os.Getenv("HOME") + dataDir[1:] + "/geth.ipc"
@@ -141,11 +156,6 @@ func main() {
 		log.Fatal(err)
 	} else {
 		client = clt
-	}
-	if cABI, err := abi.JSON(strings.NewReader(clearDef)); err != nil {
-		log.Fatal("abi.JSON", err)
-	} else {
-		clearABI = cABI
 	}
 
 	contractAddr = common.HexToAddress(ctAddr)
@@ -192,24 +202,20 @@ func main() {
 		}
 	}
 	// wait for last TX commit
-	for {
-		_, isPend, _ := client.TransactionByHash(context.Background(), *hash)
+	tx, _, err := client.TransactionByHash(ctx, *hash)
+	if err != nil {
+		log.Fatal("last tx failed", err)
+	}
+	if tr, err := bind.WaitMined(ctx, client, tx); err != nil {
+		fmt.Printf("last tx sent: %s", hash.Hex())
+		fmt.Println("...timeout or error", err)
+	} else {
 		t2 = time.Now()
-		if !isPend || t2.Sub(t1) > 30*time.Second {
-			fmt.Printf("last tx sent: %s", hash.Hex())
-			if isPend {
-				fmt.Println("... timeout")
-			} else {
-				ms := t2.Sub(t1).Milliseconds()
-				nSec = float64(ms) / 1000.0
-				fmt.Printf("... done, cost %d ms\n", ms)
-				if tr, err := client.TransactionReceipt(ctx, *hash); err == nil {
-					fmt.Printf("%d Gas used per call\n", tr.GasUsed)
-				}
-				fmt.Printf("%.3f calls per second\n", float64(count)/nSec)
-			}
-			break
-		}
+		ms := t2.Sub(t1).Milliseconds()
+		nSec = float64(ms) / 1000.0
+		fmt.Printf("... done, cost %d ms\n", ms)
+		fmt.Printf("%d Gas used per call\n", tr.GasUsed)
+		fmt.Printf("%.3f calls per second\n", float64(count)/nSec)
 	}
 	if hh, err := client.HeaderByNumber(ctx, nil); err == nil && hh.Number != nil {
 		blockE := hh.Number.Uint64()
