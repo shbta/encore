@@ -148,6 +148,38 @@ func TestCall(t *testing.T) {
 	}
 }
 
+func TestCreate(t *testing.T) {
+	var (
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		sender     = common.BytesToAddress([]byte("sender"))
+	)
+
+	code := wasmCode
+	statedb.CreateAccount(sender)
+	runtimeConfig := Config{
+		Origin:      sender,
+		State:       statedb,
+		GasLimit:    10000000,
+		Difficulty:  big.NewInt(0x200000),
+		Time:        new(big.Int).SetUint64(0),
+		Coinbase:    common.Address{},
+		BlockNumber: new(big.Int).SetUint64(1),
+		ChainConfig: &params.ChainConfig{
+			ChainID:        big.NewInt(1),
+			HomesteadBlock: new(big.Int),
+			ByzantiumBlock: new(big.Int),
+		},
+		EVMConfig: vm.Config{},
+	}
+	code1, address, leftOverGas, err := Create(code, &runtimeConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ret code len:", len(code1))
+	t.Log("ret addr:", common.ToHex(address.Bytes()))
+	t.Log("gas used:", 10000000-leftOverGas)
+}
+
 func BenchmarkCall(b *testing.B) {
 	code := wasmCode
 	abi, err := abi.JSON(strings.NewReader(definition))
@@ -167,6 +199,7 @@ func BenchmarkCall(b *testing.B) {
 		}
 	}
 }
+
 func benchmarkEVM_Create(bench *testing.B, code string) {
 	var (
 		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
@@ -205,9 +238,43 @@ func benchmarkEVM_Create(bench *testing.B, code string) {
 	bench.StopTimer()
 }
 
+func benchmarkEVM_CreateNew(bench *testing.B, code []byte) {
+	var (
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		sender     = common.BytesToAddress([]byte("sender"))
+	)
+
+	statedb.CreateAccount(sender)
+	runtimeConfig := Config{
+		Origin:      sender,
+		State:       statedb,
+		GasLimit:    10000000,
+		Difficulty:  big.NewInt(0x200000),
+		Time:        new(big.Int).SetUint64(0),
+		Coinbase:    common.Address{},
+		BlockNumber: new(big.Int).SetUint64(1),
+		ChainConfig: &params.ChainConfig{
+			ChainID:        big.NewInt(1),
+			HomesteadBlock: new(big.Int),
+			ByzantiumBlock: new(big.Int),
+		},
+		EVMConfig: vm.Config{},
+	}
+	// Warm up the intpools and stuff
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		_, _, _, err := Create(code, &runtimeConfig)
+		if err != nil {
+			bench.Fatal(err)
+		}
+	}
+	bench.StopTimer()
+}
+
 func BenchmarkEVM_CREATE_500(bench *testing.B) {
 	// initcode size 500K, repeatedly calls CREATE and then modifies the mem contents
-	benchmarkEVM_Create(bench, "5b6207a120600080f0600152600056")
+	//benchmarkEVM_Create(bench, "5b6207a120600080f0600152600056")
+	benchmarkEVM_CreateNew(bench, wasmCode)
 }
 func BenchmarkEVM_CREATE2_500(bench *testing.B) {
 	// initcode size 500K, repeatedly calls CREATE2 and then modifies the mem contents
