@@ -51,7 +51,7 @@ func clearName() (ret string) {
 	}
 	if res, ok := rr.(string); !ok {
 		log.Fatal("type of return mismatch")
-	} else if res != "SHFE Clear" {
+	} else if res != "SHFE Clear" && res != "SHFE" {
 		log.Fatal("contract address may be wrong")
 	} else {
 		ret = res
@@ -206,14 +206,18 @@ func main() {
 	if err != nil {
 		log.Fatal("last tx failed", err)
 	}
+	fmt.Printf("last tx sent: %s", hash.Hex())
 	if tr, err := bind.WaitMined(ctx, client, tx); err != nil {
-		fmt.Printf("last tx sent: %s", hash.Hex())
 		fmt.Println("...timeout or error", err)
 	} else {
 		t2 = time.Now()
 		ms := t2.Sub(t1).Milliseconds()
 		nSec = float64(ms) / 1000.0
-		fmt.Printf("... done, cost %d ms\n", ms)
+		sCode := "OK"
+		if tr.Status == 0 {
+			sCode = "Failed"
+		}
+		fmt.Printf("... %s @Block %d, cost %d ms\n", sCode, tr.BlockNumber.Uint64(), ms)
 		fmt.Printf("%d Gas used per call\n", tr.GasUsed)
 		fmt.Printf("%.3f calls per second\n", float64(count)/nSec)
 	}
