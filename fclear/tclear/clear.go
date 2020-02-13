@@ -94,7 +94,7 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 		clearBytes = cBytes
 	}
 	// cost about 30469 gas
-	gasLimit := uint64(60000) // in units
+	gasLimit := uint64(80000) // in units
 	//gasPrice, err := client.SuggestGasPrice(ctx)
 	//if err != nil {
 	//log.Fatal(err)

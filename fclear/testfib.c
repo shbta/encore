@@ -29,7 +29,7 @@ void main() // __attribute__((export_name("main")))
 	} else if (in_len == 4) {
 		// should be call owner() with Sig 0x8da5cb5b
 		ret[7] = 0;
-		ret[19] = 0xfe;
+		ret[31] = 0xfe;
 		eth_finish(ret,32);
 		return;
 	}
