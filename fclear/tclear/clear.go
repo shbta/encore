@@ -159,11 +159,13 @@ func main() {
 	var ctAddr string
 	var dumpABI bool
 	var codeDeploy string
+	var abiPath string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
 	flag.StringVar(&ctAddr, "contract", "0x594668030104D245a4Ed6d785E15f66a8200B824", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
+	flag.StringVar(&abiPath, "abi", "", "path of ABI file")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
 		flag.PrintDefaults()
@@ -171,6 +173,19 @@ func main() {
 	}
 	flag.Parse()
 
+	if abiPath != "" {
+		if ff, err := os.Open(abiPath); err != nil {
+			fmt.Println("abi File", err)
+		} else {
+			if code, err := ioutil.ReadAll(ff); err != nil {
+				ff.Close()
+				log.Fatal(err)
+			} else {
+				clearDef = string(code)
+			}
+			ff.Close()
+		}
+	}
 	if cABI, err := abi.JSON(strings.NewReader(clearDef)); err != nil {
 		log.Fatal("abi.JSON", err)
 	} else {
@@ -209,15 +224,19 @@ func main() {
 		if ff, err := os.Open(codeDeploy); err != nil {
 			log.Fatal("open", codeDeploy, err)
 		} else if code, err := ioutil.ReadAll(ff); err != nil {
+			ff.Close()
 			log.Fatal(err)
-		} else if addr, err := deploy(code); err != nil {
-			if addr != emptyAddr {
-				log.Fatal(addr.Hex(), " error:", err)
-			} else {
-				log.Fatal(err)
-			}
 		} else {
-			fmt.Printf("Contract deployed at %s\n", addr.Hex())
+			ff.Close()
+			if addr, err := deploy(code); err != nil {
+				if addr != emptyAddr {
+					log.Fatal(addr.Hex(), " error:", err)
+				} else {
+					log.Fatal(err)
+				}
+			} else {
+				fmt.Printf("Contract deployed at %s\n", addr.Hex())
+			}
 		}
 		os.Exit(0)
 	}
