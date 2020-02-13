@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"math/rand"
@@ -24,6 +25,8 @@ func calcETH(v *big.Int) float64 {
 	r := v.Div(v, big.NewInt(1e14))
 	return float64(r.Int64()) / 10000.0
 }
+
+var emptyAddr = common.Address{}
 
 var clearABI abi.ABI
 var client *ethclient.Client
@@ -51,7 +54,7 @@ func clearName() (ret string) {
 	}
 	if res, ok := rr.(string); !ok {
 		log.Fatal("type of return mismatch")
-	} else if res != "SHFE Clear" && res != "SHFE" {
+	} else if !strings.HasPrefix(res, "SHFE Clear") {
 		log.Fatal("contract address may be wrong")
 	} else {
 		ret = res
@@ -92,15 +95,15 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	}
 	// cost about 30469 gas
 	gasLimit := uint64(60000) // in units
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//gasPrice, err := client.SuggestGasPrice(ctx)
+	//if err != nil {
+	//log.Fatal(err)
+	//}
 	tx := ethereum.CallMsg{
 		From:     *accounts[0],
 		To:       &contractAddr,
 		Gas:      gasLimit,
-		GasPrice: gasPrice,
+		GasPrice: big.NewInt(0),
 		Data:     clearBytes,
 	}
 	hash, err := client.SignSendTransaction(ctx, &tx)
@@ -110,6 +113,38 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBu
 	return hash, err
 }
 
+func deploy(code []byte) (common.Address, error) {
+	// cost about 30469 gas
+	gasLimit := uint64(600000) // in units
+	tx := ethereum.CallMsg{
+		From: *accounts[0],
+		Gas:  gasLimit,
+		Data: code,
+	}
+	hash, err := client.SignSendTransaction(ctx, &tx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx1, _, err := client.TransactionByHash(ctx, *hash)
+	if err != nil {
+		log.Fatal("last tx failed", err)
+	}
+	var addr common.Address
+	if tr, err := bind.WaitMined(ctx, client, tx1); err != nil {
+		return emptyAddr, err
+	} else if tr.Status == 0 || tr.ContractAddress == emptyAddr {
+		return emptyAddr, fmt.Errorf("zero address")
+	} else {
+		addr = tr.ContractAddress
+		if cc, err := client.CodeAt(ctx, addr, nil); err != nil {
+			return emptyAddr, err
+		} else if len(cc) == 0 {
+			return addr, fmt.Errorf("No code after deploy")
+		}
+	}
+	return addr, nil
+}
+
 func TimeMs2String(ms uint64) string {
 	sec := int64(ms / 1000)
 	ns := int64(ms%1000) * 1000000
@@ -117,15 +152,18 @@ func TimeMs2String(ms uint64) string {
 	return tt.Format("2006-01-02 15:04:05.000Z07:00")
 }
 
+// old addr w/out ewasm fib "0x6866423b57c92e666274eb8f982FA1438735Ef2B"
 func main() {
 	var count int
 	var dataDir string
 	var ctAddr string
 	var dumpABI bool
+	var codeDeploy string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
-	flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
+	flag.StringVar(&ctAddr, "contract", "0x594668030104D245a4Ed6d785E15f66a8200B824", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
+	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: clear [options]\n")
 		flag.PrintDefaults()
@@ -166,6 +204,22 @@ func main() {
 		log.Fatal("no accounts")
 	} else {
 		accounts = acct
+	}
+	if codeDeploy != "" {
+		if ff, err := os.Open(codeDeploy); err != nil {
+			log.Fatal("open", codeDeploy, err)
+		} else if code, err := ioutil.ReadAll(ff); err != nil {
+			log.Fatal(err)
+		} else if addr, err := deploy(code); err != nil {
+			if addr != emptyAddr {
+				log.Fatal(addr.Hex(), " error:", err)
+			} else {
+				log.Fatal(err)
+			}
+		} else {
+			fmt.Printf("Contract deployed at %s\n", addr.Hex())
+		}
+		os.Exit(0)
 	}
 
 	fromAddress := accounts[0]
