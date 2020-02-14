@@ -1,20 +1,11 @@
-typedef	int	i32;
-typedef long long i64;
-typedef __int128_t i128;
-typedef	unsigned int	u32;
-typedef unsigned long long u64;
-typedef __uint128_t u128;
-
-void eth_finish(char* _off, i32 _len) __attribute__((__import_module__("ethereum"), __import_name__("finish")));
-i32  eth_getCallDataSize() __attribute__((import_module("ethereum"),import_name("getCallDataSize")));
-void eth_callDataCopy(void *res, i32 dOff, i32 dLen) __attribute__((import_module("ethereum"),import_name("callDataCopy")));
+#include "ewasm.h"
 
 static u32 fib(u32 n) {
 	if (n < 2) return n;
 	return fib(n-1)+fib(n-2);
 }
 
-static	char	ret[32]={0,0,0,0, 0,0,0,10};
+static	byte	ret[32]={0,0,0,0, 0,0,0,10};
 #pragma clang diagnostic ignored "-Wmain-return-type"
 void main() // __attribute__((export_name("main")))
 {
