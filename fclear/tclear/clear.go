@@ -86,6 +86,27 @@ func getClientPosition(clt uint32, sym, member uint16) (nLong, nShort uint32) {
 	return
 }
 
+func runConstruct() error {
+	var clearBytes []byte
+	if clearABI.Constructor.Sig() != "()" {
+		if cBytes, err := clearABI.Pack("", 5, "SHFE Clear"); err != nil {
+			return err
+		} else {
+			clearBytes = cBytes
+		}
+	}
+	tx := ethereum.CallMsg{
+		From: *accounts[0],
+		To:   &contractAddr,
+		Data: clearBytes,
+	}
+	if _, err := client.CallContract(ctx, tx, nil); err != nil {
+		log.Println("call contract", err)
+		return err
+	}
+	return nil
+}
+
 func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBuy bool) (*common.Hash, error) {
 	var clearBytes []byte
 	if cBytes, err := clearABI.Pack("dealClearing", clt, qty, price, sym, member, isOff, isBuy); err != nil {
@@ -142,6 +163,11 @@ func deploy(code []byte) (common.Address, error) {
 			return addr, fmt.Errorf("No code after deploy")
 		}
 	}
+	contractAddr = addr
+	// run constructor
+	if err := runConstruct(); err != nil {
+		log.Fatal("run Constructor", err)
+	}
 	return addr, nil
 }
 
@@ -192,6 +218,11 @@ func main() {
 		clearABI = cABI
 	}
 	if dumpABI {
+		{
+			ab := clearABI.Constructor
+			fmt.Printf("Constructor Method %s Id: %s, Sig: %s\n",
+				ab.Name, common.ToHex(ab.ID()), ab.Sig())
+		}
 		for _, ab := range clearABI.Methods {
 			fmt.Printf("Method %s Id: %s, Sig: %s\n", ab.Name,
 				common.ToHex(ab.ID()), ab.Sig())
