@@ -89,20 +89,27 @@ func getClientPosition(clt uint32, sym, member uint16) (nLong, nShort uint32) {
 func runConstruct() error {
 	var clearBytes []byte
 	if clearABI.Constructor.Sig() != "()" {
-		if cBytes, err := clearABI.Pack("", 5, "SHFE Clear"); err != nil {
+		if cBytes, err := clearABI.Pack("", uint32(5), "SHFE Clear"); err != nil {
 			return err
 		} else {
 			clearBytes = cBytes
 		}
+	} else {
+		clearBytes = clearABI.Constructor.ID()
 	}
+	log.Println("constructor input len", len(clearBytes), clearBytes)
+	gasLimit := uint64(80000) // in units
 	tx := ethereum.CallMsg{
 		From: *accounts[0],
 		To:   &contractAddr,
+		Gas:  gasLimit,
 		Data: clearBytes,
 	}
-	if _, err := client.CallContract(ctx, tx, nil); err != nil {
+	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Println("call contract", err)
 		return err
+	} else {
+		log.Println("constructor return len", len(res))
 	}
 	return nil
 }

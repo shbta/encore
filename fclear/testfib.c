@@ -6,11 +6,13 @@ static u32 fib(u32 n) {
 }
 
 static	byte	ret[32]={0,0,0,0, 0,0,0,10};
-static	bytes32	key0;
+static	bytes32	key0={0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0, 1};
 #pragma clang diagnostic ignored "-Wmain-return-type"
 void main() // __attribute__((export_name("main")))
 {
 	i32	in_len;
+	// constructor with null input while no arguments
+	// constructor called w/out method ID?
 	if ((in_len=eth_getCallDataSize()) == 0) eth_finish(ret, 8);
 	u32 	met;
 	u32 n = 10;
@@ -28,9 +30,9 @@ void main() // __attribute__((export_name("main")))
 	case 0x8da5cb5b:
 	{
 		// should be call owner() with Sig 0x8da5cb5b
-		//eth_storageLoad(key0, ret);
-		ret[7] = 0;
-		ret[31] = 0xfe;
+		eth_storageLoad(key0, ret);
+		//ret[7] = 0;
+		//ret[31] = 0xfe;
 		eth_finish(ret,32);
 		return;
 	}
