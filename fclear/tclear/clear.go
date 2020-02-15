@@ -94,29 +94,51 @@ func runConstruct() error {
 		} else {
 			clearBytes = cBytes
 		}
-	} else {
-		clearBytes = clearABI.Constructor.ID()
 	}
-	log.Println("constructor input len", len(clearBytes), clearBytes)
+	log.Println("Constructor input", len(clearBytes), clearBytes)
+	// cost about 41004 gas
 	gasLimit := uint64(80000) // in units
 	tx := ethereum.CallMsg{
-		From: *accounts[0],
-		To:   &contractAddr,
-		Gas:  gasLimit,
-		Data: clearBytes,
+		From:     *accounts[0],
+		To:       &contractAddr,
+		Gas:      gasLimit,
+		GasPrice: big.NewInt(0),
+		Data:     clearBytes,
 	}
-	if res, err := client.CallContract(ctx, tx, nil); err != nil {
-		log.Println("call contract", err)
+	t1 := time.Now()
+	hash, err := client.SignSendTransaction(ctx, &tx)
+	if err != nil {
+		log.Println("Call constructor", err)
+		return err
+	}
+	// wait for last TX commit
+	tx1, _, err := client.TransactionByHash(ctx, *hash)
+	if err != nil {
+		log.Fatal("Constructor tx failed", err)
+	}
+	fmt.Printf("Constructor tx sent: %s", hash.Hex())
+	if tr, err := bind.WaitMined(ctx, client, tx1); err != nil {
+		fmt.Println("...timeout or error", err)
 		return err
 	} else {
-		log.Println("constructor return len", len(res))
+		t2 := time.Now()
+		ms := t2.Sub(t1).Milliseconds()
+		nSec := float64(ms) / 1000.0
+		sCode := "OK"
+		if tr.Status == 0 {
+			sCode = "Failed"
+		}
+		fmt.Printf("Constructor %s, cost %.3f seconds, %d gas used\n",
+			sCode, nSec, tr.GasUsed)
 	}
 	return nil
 }
 
-func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff, isBuy bool) (*common.Hash, error) {
+func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
+	isBuy bool) (*common.Hash, error) {
 	var clearBytes []byte
-	if cBytes, err := clearABI.Pack("dealClearing", clt, qty, price, sym, member, isOff, isBuy); err != nil {
+	if cBytes, err := clearABI.Pack("dealClearing", clt, qty, price, sym,
+		member, isOff, isBuy); err != nil {
 		return nil, err
 	} else {
 		clearBytes = cBytes
@@ -164,6 +186,7 @@ func deploy(code []byte) (common.Address, error) {
 		return emptyAddr, fmt.Errorf("zero address")
 	} else {
 		addr = tr.ContractAddress
+		fmt.Printf("Contract addr: %s, gas used: %d\n", addr.Hex(), tr.GasUsed)
 		if cc, err := client.CodeAt(ctx, addr, nil); err != nil {
 			return emptyAddr, err
 		} else if len(cc) == 0 {
@@ -171,7 +194,6 @@ func deploy(code []byte) (common.Address, error) {
 		}
 	}
 	contractAddr = addr
-	// run constructor
 	if err := runConstruct(); err != nil {
 		log.Fatal("run Constructor", err)
 	}

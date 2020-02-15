@@ -13,7 +13,21 @@ void main() // __attribute__((export_name("main")))
 	i32	in_len;
 	// constructor with null input while no arguments
 	// constructor called w/out method ID?
-	if ((in_len=eth_getCallDataSize()) == 0) eth_finish(ret, 8);
+	if (((in_len=eth_getCallDataSize())  & 0x1f )== 0) {
+		// Constructor
+#ifdef	OLD_USED_IN_TEST
+		if (in_len == 0) {
+			eth_finish(ret, 8);
+			return;	// unreachable
+		}
+		eth_callDataCopy(ret, 0, 32);
+#endif
+		// eth_getCaller cost 20k gas
+		eth_getCaller(ret+12);
+		eth_storageStore(key0, ret);
+		eth_finish(ret, 0);
+		return;	// unreachable
+	}
 	u32 	met;
 	u32 n = 10;
 	eth_callDataCopy(&met, 0, 4);
