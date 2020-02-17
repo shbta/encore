@@ -24,6 +24,7 @@ build/_vendor/pkg
 .project
 .settings
 *.o
+*.so
 *.wasm
 
 # used by the Makefile
