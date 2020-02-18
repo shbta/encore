@@ -7,7 +7,7 @@
 
 FILE=$1
 cat <<EOF > /tmp/${FILE}.c
-#include "ewasm.h"
+#include <ewasm/ewasm.h>
 
 static u32 fib(u32 n) {
 	if (n < 2) return n;

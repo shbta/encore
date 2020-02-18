@@ -144,7 +144,7 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 		clearBytes = cBytes
 	}
 	// cost about 30469 gas
-	gasLimit := uint64(80000) // in units
+	gasLimit := uint64(180000) // in units
 	//gasPrice, err := client.SuggestGasPrice(ctx)
 	//if err != nil {
 	//log.Fatal(err)
@@ -208,6 +208,7 @@ func TimeMs2String(ms uint64) string {
 }
 
 // old addr w/out ewasm fib "0x6866423b57c92e666274eb8f982FA1438735Ef2B"
+// addr w/ ewasm fib "0x594668030104D245a4Ed6d785E15f66a8200B824"
 func main() {
 	var count int
 	var dataDir string
@@ -218,6 +219,7 @@ func main() {
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
 	flag.StringVar(&ctAddr, "contract", "0x594668030104D245a4Ed6d785E15f66a8200B824", "Address of Clearing contract")
+	//flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.StringVar(&abiPath, "abi", "", "path of ABI file")
