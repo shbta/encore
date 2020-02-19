@@ -89,13 +89,14 @@ func getClientPosition(clt uint32, sym, member uint16) (nLong, nShort uint32) {
 func runConstruct() error {
 	var clearBytes []byte
 	if clearABI.Constructor.Sig() != "()" {
-		if cBytes, err := clearABI.Pack("", uint32(5), "SHFE Clear"); err != nil {
+		if cBytes, err := clearABI.Pack("", uint32(5),
+			"SHFE Clear"); err != nil {
 			return err
 		} else {
 			clearBytes = cBytes
 		}
 	}
-	log.Println("Constructor input", len(clearBytes), clearBytes)
+	//log.Println("Constructor input", len(clearBytes), clearBytes)
 	// cost about 41004 gas
 	gasLimit := uint64(80000) // in units
 	tx := ethereum.CallMsg{
@@ -165,7 +166,7 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 
 func deploy(code []byte) (common.Address, error) {
 	// cost about 30469 gas
-	gasLimit := uint64(600000) // in units
+	gasLimit := uint64(1200000) // in units
 	tx := ethereum.CallMsg{
 		From: *accounts[0],
 		Gas:  gasLimit,
