@@ -37,7 +37,7 @@ var ctx context.Context
 func clearName() (ret string) {
 	var clearBytes []byte
 	if cBytes, err := clearABI.Pack("name"); err != nil {
-		log.Fatal(err)
+		log.Fatal("Pack name", err)
 	} else {
 		clearBytes = cBytes
 	}
@@ -50,7 +50,7 @@ func clearName() (ret string) {
 	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Fatal(err)
 	} else if err = clearABI.Unpack(&rr, "name", res); err != nil {
-		log.Fatal(err)
+		log.Fatal("Unpack name() ", err)
 	}
 	if res, ok := rr.(string); !ok {
 		log.Fatal("type of return mismatch")
@@ -135,6 +135,53 @@ func runConstruct() error {
 	return nil
 }
 
+func memSymIdx(symb, memb uint16, clt uint32) (ret uint64) {
+	ret = uint64(memb) << 48
+	ret |= uint64(symb) << 32
+	ret |= uint64(clt)
+	return
+}
+
+type memPosition struct {
+	nLong  uint32
+	nShort uint32
+	p_l    uint64
+	fee    uint64
+}
+
+var memPos = map[uint64]memPosition{}
+var nShortInv, nLongInv int
+
+func goClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
+	isBuy bool) {
+	idx := memSymIdx(sym, member, clt)
+	mpo := memPos[idx]
+	if isOff {
+		if isBuy {
+			if mpo.nShort < qty {
+				nShortInv++
+				//log.Println("no enough short position to offset")
+				return
+			}
+			mpo.nShort -= qty
+		} else {
+			if mpo.nLong < qty {
+				nLongInv++
+				//log.Println("no enough long position to offset")
+				return
+			}
+			mpo.nLong -= qty
+		}
+	} else {
+		if isBuy {
+			mpo.nLong += qty
+		} else {
+			mpo.nShort += qty
+		}
+	}
+	memPos[idx] = mpo
+}
+
 func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 	isBuy bool) (*common.Hash, error) {
 	var clearBytes []byte
@@ -144,6 +191,7 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 	} else {
 		clearBytes = cBytes
 	}
+	goClearing(clt, qty, price, sym, member, isOff, isBuy)
 	// cost about 30469 gas
 	gasLimit := uint64(180000) // in units
 	//gasPrice, err := client.SuggestGasPrice(ctx)
@@ -209,7 +257,8 @@ func TimeMs2String(ms uint64) string {
 }
 
 // old addr w/out ewasm fib "0x6866423b57c92e666274eb8f982FA1438735Ef2B"
-// addr w/ ewasm fib "0x594668030104D245a4Ed6d785E15f66a8200B824"
+// old addr w/ ewasm fib "0x594668030104D245a4Ed6d785E15f66a8200B824"
+// addr w/ ewasm fib "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4"
 func main() {
 	var count int
 	var dataDir string
@@ -219,8 +268,8 @@ func main() {
 	var abiPath string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
-	flag.StringVar(&ctAddr, "contract", "0x594668030104D245a4Ed6d785E15f66a8200B824", "Address of Clearing contract")
-	//flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
+	//flag.StringVar(&ctAddr, "contract", "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4", "Address of Clearing contract")
+	flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.StringVar(&abiPath, "abi", "", "path of ABI file")
@@ -318,13 +367,24 @@ func main() {
 		blockS = hh.Number.Uint64()
 		fmt.Printf("block %d %s before call\n", blockS, TimeMs2String(hh.TimeMilli))
 	}
+	var clt uint32
+	memb := uint16(101)
+	// fetch 1000 .. 1003 memPosition
+	for clt = 1000; clt < 1004; clt++ {
+		idx := memSymIdx(1, memb, clt)
+		mpo := memPos[idx]
+		mpo.nLong, mpo.nShort = getClientPosition(clt, 1, memb)
+		memPos[idx] = mpo
+		if clt == 1003 {
+			fmt.Printf("Before Clear client %d position: %d long %d short\n",
+				clt, mpo.nLong, mpo.nShort)
+		}
+	}
 	t1 := time.Now()
 	rand.Seed(t1.Unix())
 	var nSec float64
 	var t2 time.Time
 	var hash *common.Hash
-	var clt uint32
-	memb := uint16(101)
 	for i := 0; i < count; i++ {
 		clt = uint32(1000 + i%4)
 		qty := uint32(1 + rand.Int31n(200))
@@ -369,4 +429,12 @@ func main() {
 	}
 	nL, nS := getClientPosition(clt, 1, memb)
 	fmt.Printf("client %d position: %d long, %d short\n", clt, nL, nS)
+	fmt.Printf("short not enough times: %d, long not enough times: %d\n",
+		nShortInv, nLongInv)
+	idx := memSymIdx(1, memb, clt)
+	mpo := memPos[idx]
+	if mpo.nLong != nL || mpo.nShort != nS {
+		fmt.Printf("goClear diff, client %d position: %d long %d short\n", clt,
+			mpo.nLong, mpo.nShort)
+	}
 }
