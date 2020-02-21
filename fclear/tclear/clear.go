@@ -214,7 +214,11 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 
 func deploy(code []byte) (common.Address, error) {
 	// cost about 30469 gas
-	gasLimit := uint64(1200000) // in units
+	// cost about 1003264 gas for testfib DEBUG version
+	// cost about 863740 gas for testfib Release version
+	// cost about 1229104 gas for clear DEBUG version
+	// cost about 1096008 gas for clear Release version
+	gasLimit := uint64(1500000) // in units
 	tx := ethereum.CallMsg{
 		From: *accounts[0],
 		Gas:  gasLimit,
@@ -268,8 +272,8 @@ func main() {
 	var abiPath string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
-	//flag.StringVar(&ctAddr, "contract", "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4", "Address of Clearing contract")
-	flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
+	flag.StringVar(&ctAddr, "contract", "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4", "Address of Clearing contract")
+	//flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.StringVar(&abiPath, "abi", "", "path of ABI file")

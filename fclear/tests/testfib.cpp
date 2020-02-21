@@ -8,21 +8,15 @@ static u32 fib(u32 n) {
 static ewasm_argument	arg1[]={{UINT64}};
 static ewasm_argument	result1[]={{UINT64}};
 static ewasm_argument	retAddr[]={{UINT160}};
-ewasm::method	_methods[]={
-	{"constructor", 0},
-	{"fib", 0x73181a7b, arg1, result1},
-	{"owner", 0x8da5cb5b, 0, retAddr},
+static ewasm_method	_methods[]={
+	{(char *)"constructor", 0, 0, 0},
+	{(char *)"fib", 0x73181a7b, 1, 1, arg1, result1},
+	{(char *)"owner", 0x8da5cb5b, 0, 1, nullptr, retAddr},
 };
 
-namespace ewasm {
-static ABI myABI={_methods};
-}
+extern "C" ewasm_ABI __Contract_ABI={3, _methods};
 
 using namespace	ewasm;
-
-extern "C" {
-ewasm_ABI __Contract_ABI=myABI;
-}
 
 static	byte	ret[32]={0,0,0,0, 0,0,0,10};
 static	bytes32	key0(1), val32;
