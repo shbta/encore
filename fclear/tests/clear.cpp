@@ -1,6 +1,7 @@
 #include <ewasm/ewasm.hpp>
 #include <assert.h>
 
+using namespace	ewasm;
 struct	memPosition {
 	uint32_t	nLong;
 	uint32_t	nShort;
@@ -14,18 +15,22 @@ static ewasm_argument	arg7[]={{UINT32}, {UINT32}, {UINT64},
 				{UINT16}, {UINT16}, {BOOL}, {BOOL},
 			};
 static ewasm_argument	ret2[]={{UINT32},{UINT32}};
-static ewasm_argument	retStr{STRING};
-ewasm_method	_methods[]={
-	{(char *)"constructor", 0, 2, 0, &arg2[0]},
-	{(char *)"owner", 0x8da5cb5b, 0, 0,},
-	{(char *)"name", 0x06fdde03, 0, 1, nullptr, &retStr},
-	{(char *)"dealClearing", 0xbe704381, 7, 0, &arg7[0]},
-	{(char *)"getClientPosition", 0xf42a90d6, 3, 2, &arg3[0], &ret2[0]},
+static ewasm_argument	retStr[]={{STRING}};
+method	_methods[]={
+	{"constructor", 0, arg2},
+	{"owner", 0x8da5cb5b},
+	{"name", 0x06fdde03, 0, retStr},
+	{"dealClearing", 0xbe704381, arg7},
+	{"getClientPosition", 0xf42a90d6, arg3, ret2},
 };
 
-extern "C" ewasm_ABI __Contract_ABI={5, _methods};
+namespace ewasm {
+static ABI myABI={_methods};
+}
 
-using namespace	ewasm;
+extern "C" {
+ewasm_ABI __Contract_ABI=myABI;
+}
 
 static	uint64_t memSymbolIdx(uint16_t symb, uint16_t memb, uint32_t clt) {
 	uint64_t	ret = (uint64_t)memb << 48;
@@ -57,7 +62,8 @@ static void	doClear(u32 clt, u32 qty, u64 price, uint16_t sym, uint16_t memb,
 }
 
 static	bytes	cName("SHFE Clear");
-extern "C" void ewasm_main(const u32 Id, const ewasm_method *mtdPtr)
+
+void ewasm_main(const u32 Id, const ewasm_method *mtdPtr)
 {
 	static_assert(sizeof(memPosition) == 32, "memPosition size MUST == 32");
 	bytes32		val32;
@@ -74,7 +80,7 @@ extern "C" void ewasm_main(const u32 Id, const ewasm_method *mtdPtr)
 	case 0x06fdde03:
 		// name()
 		debug_print(cName.data(), cName.size());
-		retStr.pValue = cName;
+		retStr[0].pValue = cName;
 		break;
 	case 0:
 		// Constructor
