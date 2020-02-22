@@ -262,7 +262,7 @@ func TimeMs2String(ms uint64) string {
 
 // old addr w/out ewasm fib "0x6866423b57c92e666274eb8f982FA1438735Ef2B"
 // old addr w/ ewasm fib "0x594668030104D245a4Ed6d785E15f66a8200B824"
-// addr w/ ewasm fib "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4"
+// addr w/ ewasm fib "0xf5704f03B4e5833AF156B768aCf76Af6491E258D"
 func main() {
 	var count int
 	var dataDir string
@@ -272,7 +272,7 @@ func main() {
 	var abiPath string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.StringVar(&dataDir, "data", "~/testebc", "Data directory for database")
-	flag.StringVar(&ctAddr, "contract", "0x1A3cFe87D5F54da5D8dB2f87a1B22DB6149857B4", "Address of Clearing contract")
+	flag.StringVar(&ctAddr, "contract", "0xf5704f03B4e5833AF156B768aCf76Af6491E258D", "Address of Clearing contract")
 	//flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")

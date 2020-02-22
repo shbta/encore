@@ -16,24 +16,23 @@ static ewasm_argument	arg7[]={{UINT32}, {UINT32}, {UINT64},
 			};
 static ewasm_argument	ret2[]={{UINT32},{UINT32}};
 static ewasm_argument	retStr[]={{STRING}};
-static ewasm_method	_methods[]={
-	{(char *)"constructor", 0, 2, 0, arg2},
-	{(char *)"owner", 0x8da5cb5b, 0, 0},
-	{(char *)"name", 0x06fdde03, 0, 1, nullptr, retStr},
-	{(char *)"dealClearing", 0xbe704381, 7, 0, arg7},
-	{(char *)"getClientPosition", 0xf42a90d6, 3, 2, arg3, ret2},
+static ewasm::method	_methods[]={
+	{"constructor", 0, arg2},
+	{"owner", 0x8da5cb5b},
+	{"name", 0x06fdde03, 0, retStr},
+	{"dealClearing", 0xbe704381, arg7},
+	{"getClientPosition", 0xf42a90d6, arg3, ret2},
 };
 
-extern "C" ewasm_ABI __Contract_ABI={5, _methods};
-#ifdef ommit
 namespace ewasm {
 static ABI myABI={_methods};
 }
 
 extern "C" {
-ewasm_ABI __Contract_ABI=myABI;
+ewasm_ABI __Contract_ABI{myABI.nMethods, myABI.methods};
+// assign C struct from C++ struct does not work
+//ewasm_ABI __Contract_ABI=myABI;
 }
-#endif
 
 static	uint64_t memSymbolIdx(uint16_t symb, uint16_t memb, uint32_t clt) {
 	uint64_t	ret = (uint64_t)memb << 48;
