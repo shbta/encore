@@ -1,10 +1,10 @@
 #include <ewasm/ewasm.hpp>
 
-static u32 fib(u32 n) {
+static u64 fib(u32 n) {
 	if (n < 2) return n;
-	u32	result=2;
-	u32	pre = 1;
-	u32 next = 1;
+	u64	result=2;
+	u64	pre = 1;
+	u64 next = 1;
 	for (u32 i = 2; i < n; ++i) {
 		result = pre + next;
 		pre = next;
