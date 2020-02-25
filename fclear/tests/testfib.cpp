@@ -40,9 +40,7 @@ void ewasm_main(const u32 Id, const ewasm_method *mtdPtr)
 {
 	static_assert(sizeof(method) == sizeof(ewasm_method), "size of ewasm_method and method MUST equal");
 	static_assert(sizeof(ABI) == sizeof(ewasm_ABI), "size of ewasm_ABI and ABI MUST equal");
-	//static_assert(sizeof(nullArg) == 0, "size of empty arguments MUST be 0");
 	u32 n = 10;
-	debug_printMemHex((void *)&Id, sizeof(Id));
 	switch (Id) {
 	case 0x73181a7b:
 		n = arg1[0]._nValue;
@@ -66,9 +64,9 @@ void ewasm_main(const u32 Id, const ewasm_method *mtdPtr)
 		return;
 	}
 #ifdef	ommit
-	u32 res = __builtin_bswap32(fib(n));
-	*(u32 *)(ret+4) = 0;
-	*(u32 *)(ret+28) = res;
+	u64 res = __builtin_bswap64(fib(n));
+	*(u64 *)(ret+4) = 0;
+	*(u64 *)(ret+24) = res;
 	eth_finish(ret,32);
 #else
 	result1[0]._nValue = fib(n);
