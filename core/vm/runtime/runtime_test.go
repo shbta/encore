@@ -121,10 +121,38 @@ func TestCall(t *testing.T) {
 	}
 }
 
-func BenchmarkCall(b *testing.B) {
-	var definition = `[{"constant":true,"inputs":[{"name":"n","type":"uint32"}],"name":"FibValue","outputs":[{"name":"res","type":"uint32"}],"payable":false,"stateMutability":"pure","type":"function","signature":"0x73181a7b"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function","signature":"0x8da5cb5b"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor","signature":"constructor"}]`
-	var code = common.Hex2Bytes("60806040526004361061004b5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166373181a7b81146100505780638da5cb5b14610099575b600080fd5b34801561005c57600080fd5b506100806004803603602081101561007357600080fd5b503563ffffffff166100d7565b6040805163ffffffff9092168252519081900360200190f35b3480156100a557600080fd5b506100ae6100ea565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b60006100e282610106565b90505b919050565b60005473ffffffffffffffffffffffffffffffffffffffff1681565b600060028263ffffffff16101561011e5750806100e5565b61012a60028303610106565b61013660018403610106565b019291505056fea165627a7a723058201c43ed84caef923c027f7e1066b562e8300aaedeb109169706ff0b179d9180bc0029")
+var definition = `[{"constant":true,"inputs":[{"name":"n","type":"uint32"}],"name":"FibValue","outputs":[{"name":"res","type":"uint64"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor","signature":"constructor"}]`
+var fibCode = common.Hex2Bytes("60806040526004361061004b5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166373181a7b81146100505780638da5cb5b14610099575b600080fd5b34801561005c57600080fd5b506100806004803603602081101561007357600080fd5b503563ffffffff166100d7565b6040805163ffffffff9092168252519081900360200190f35b3480156100a557600080fd5b506100ae6100ea565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b60006100e282610106565b90505b919050565b60005473ffffffffffffffffffffffffffffffffffffffff1681565b600060028263ffffffff16101561011e5750806100e5565b61012a60028303610106565b61013660018403610106565b019291505056fea165627a7a723058201c43ed84caef923c027f7e1066b562e8300aaedeb109169706ff0b179d9180bc0029")
 
+func TestCallFib(t *testing.T) {
+	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+	address := common.HexToAddress("0x0a")
+	state.SetCode(address, fibCode)
+	abi, err := abi.JSON(strings.NewReader(definition))
+	if err != nil {
+		t.Fatal("fib ABI json", err)
+	}
+
+	fibIn, err := abi.Pack("FibValue", uint32(20))
+	if err != nil {
+		t.Fatal("abi Pack", err)
+	}
+
+	ret, _, err := Call(address, fibIn, &Config{State: state})
+	if err != nil {
+		t.Fatal("didn't expect error", err)
+	}
+
+	var num uint64
+	if err := abi.Unpack(&num, "FibValue", ret); err != nil {
+		t.Fatal("abi Unpack", err)
+	}
+	if num != 6765 {
+		t.Error("Expected 6765, got", num)
+	}
+}
+
+func BenchmarkCall(b *testing.B) {
 	abi, err := abi.JSON(strings.NewReader(definition))
 	if err != nil {
 		b.Fatal(err)
@@ -138,7 +166,7 @@ func BenchmarkCall(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 400; j++ {
-			Execute(code, cpurchase, nil)
+			Execute(fibCode, cpurchase, nil)
 		}
 	}
 }
