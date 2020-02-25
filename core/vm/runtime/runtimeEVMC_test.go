@@ -132,7 +132,7 @@ func TestCall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cpurchase, err := abi.Pack("FibValue", uint32(20))
+	cpurchase, err := abi.Pack("FibValue", uint32(50))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,8 +146,8 @@ func TestCall(t *testing.T) {
 	if err := abi.Unpack(&num, "FibValue", ret); err != nil {
 		t.Fatal("abi Unpack", err)
 	}
-	if num != 6765 {
-		t.Error("Expected 6765, got", num)
+	if num != 12586269025 {
+		t.Error("Expected 12586269025, got", num)
 	}
 }
 
