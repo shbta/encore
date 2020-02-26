@@ -49,7 +49,7 @@ const (
 	inmemorySignatures = 4096 // Number of recent block signatures to keep in memory
 
 	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
-	maxSigners = 5                      // next 13,21?
+	//maxSigners = 5                      // next 13,21?
 )
 
 // Clique proof-of-authority protocol constants.
@@ -251,8 +251,6 @@ func (c *Clique) verifyHeader(chain consensus.ChainReader, header *types.Header,
 
 	// Don't waste time checking blocks from the future
 	if header.Time() > uint64(time.Now().Unix()) {
-		// Encore
-		//log.Debug("clique verify future block", "number", number)
 		return consensus.ErrFutureBlock
 	}
 	// Checkpoint blocks need to enforce zero beneficiary
@@ -557,8 +555,6 @@ func (c *Clique) Prepare(chain consensus.ChainReader, header *types.Header) erro
 	if header.Time() < uint64(tNow.Unix()) {
 		header.TimeMilli = uint64(tNow.Unix()+1) * 1000
 	}
-	// only in-turn w/ milli second
-	//header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
 	// End Encore
 	return nil
 }
@@ -653,10 +649,7 @@ func (c *Clique) Seal(chain consensus.ChainReader, block *types.Block, results c
 		// Encore
 		// if there is any TXs, update timestamp of header and mine right now
 		if len(block.Transactions()) > 0 {
-			//tNow := time.Now()
 			delay = time.Millisecond
-			//header.TimeMilli = uint64(tNow.Unix()) * 1000
-			//header.TimeMilli += uint64(tNow.Nanosecond() / 1000000)
 			log.Info("In-turn w/ TXs, only wait 1ms")
 		}
 	}
