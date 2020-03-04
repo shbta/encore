@@ -30,6 +30,8 @@ import (
 	"github.com/ethereum/go-ethereum/evmc"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
+
+	"github.com/shbta/go-wasm"
 )
 
 // EVMC represents the reference to a common EVMC-based VM instance and
@@ -321,6 +323,15 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 	if evm.env.StateDB.GetCodeSize(contract.Address()) == 0 {
 		// Guess if this is a CREATE.
 		kind = evmc.Create
+		// Encore, validate ewasm module
+		var mod wasm.ValModule
+		if err := mod.ReadValModule(contract.Code); err != nil {
+			return nil, err
+		}
+		if err := mod.Validate(); err != nil {
+			return nil, err
+		}
+		contract.Code = mod.Bytes()
 	}
 
 	// Make sure the readOnly is only set if we aren't in readOnly yet.
