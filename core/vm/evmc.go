@@ -333,6 +333,15 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 			log.Error("ewasm Validate", "error", err)
 			return nil, err
 		}
+		// Cannot change contract code here, strip should be done before sign
+		/*
+			ocLen := len(contract.Code)
+			if ncLen := len(mod.Bytes()); ncLen < ocLen {
+				contract.Code = mod.Bytes()
+				log.Info("ewasm contract stripped", "old CodeLen", ocLen,
+					"stripped bytes", ocLen-ncLen)
+			}
+		*/
 	}
 
 	// Make sure the readOnly is only set if we aren't in readOnly yet.
