@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	wasm "github.com/shbta/go-wasm"
 )
 
 var clearDef = `[{"inputs":[{"internalType":"uint32","name":"_multi","type":"uint32"},{"internalType":"string","name":"_name","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"mem","type":"uint16"},{"indexed":false,"internalType":"uint16","name":"ric","type":"uint16"},{"indexed":false,"internalType":"bool","name":"isOff","type":"bool"},{"indexed":false,"internalType":"bool","name":"isBuy","type":"bool"}],"name":"Clear","type":"event"},{"inputs":[{"internalType":"uint32","name":"client","type":"uint32"},{"internalType":"uint32","name":"qty","type":"uint32"},{"internalType":"uint64","name":"price","type":"uint64"},{"internalType":"uint16","name":"symbol","type":"uint16"},{"internalType":"uint16","name":"member","type":"uint16"},{"internalType":"bool","name":"isOffset","type":"bool"},{"internalType":"bool","name":"isBuy","type":"bool"}],"name":"dealClearing","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint32","name":"client","type":"uint32"},{"internalType":"uint16","name":"symbol","type":"uint16"},{"internalType":"uint16","name":"member","type":"uint16"}],"name":"getClientPosition","outputs":[{"internalType":"uint32","name":"nLong","type":"uint32"},{"internalType":"uint32","name":"nShort","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getMulti","outputs":[{"internalType":"uint32","name":"_multi","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"multi","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`
@@ -218,6 +219,23 @@ func deploy(code []byte) (common.Address, error) {
 	// cost about 863740 gas for testfib Release version
 	// cost about 1229104 gas for clear DEBUG version
 	// cost about 1096008 gas for clear Release version
+	var mod wasm.ValModule
+	{
+		if err := mod.ReadValModule(code); err != nil {
+			log.Println("ewasm ReadValModule", err)
+			return emptyAddr, err
+		}
+		if err := mod.Validate(); err != nil {
+			log.Println("ewasm Validate", err)
+			return emptyAddr, err
+		}
+		ocLen := len(code)
+		if ncLen := len(mod.Bytes()); ncLen < ocLen {
+			code = mod.Bytes()
+			log.Printf("ewasm contract stripped, old CodeLen %d stripped %d bytes", ocLen, ocLen-ncLen)
+		}
+	}
+
 	gasLimit := uint64(1500000) // in units
 	tx := ethereum.CallMsg{
 		From: *accounts[0],
