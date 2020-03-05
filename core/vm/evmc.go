@@ -326,12 +326,17 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 		// Encore, validate ewasm module
 		var mod wasm.ValModule
 		if err := mod.ReadValModule(contract.Code); err != nil {
+			log.Error("ewasm ReadValModule error")
 			return nil, err
 		}
 		if err := mod.Validate(); err != nil {
+			log.Error("ewasm Validate error")
 			return nil, err
 		}
+		oldCodeLen := len(contract.Code)
 		contract.Code = mod.Bytes()
+		log.Debug("Validate EWASM contract, stripped code length", "bytes",
+			len(contract.Code), "stripped bytes", oldCodeLen-len(contract.Code))
 	}
 
 	// Make sure the readOnly is only set if we aren't in readOnly yet.
