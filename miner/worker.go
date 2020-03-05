@@ -59,7 +59,7 @@ const (
 	// minRecommitInterval is the minimal time interval to recreate the mining block with
 	// any newly arrived transactions.
 	//minRecommitInterval = 1 * time.Second
-	minRecommitInterval = 50 * time.Millisecond
+	minRecommitInterval = 20 * time.Millisecond
 
 	// maxRecommitInterval is the maximum time interval to recreate the mining block with
 	// any newly arrived transactions.
@@ -588,15 +588,6 @@ func (w *worker) resultLoop() {
 				log.Error("Block found but no relative pending task", "number", block.Number(), "sealhash", sealhash, "hash", hash)
 				continue
 			}
-			// Encore, verify timestamp of header
-			//header := block.Header()
-			//tNow := time.Now()
-			//tstamp := uint64(tNow.Unix()) * 1000
-			//tstamp += uint64(tNow.Nanosecond() / 1000000)
-			//if header.TimeMilli > tstamp {
-			//header.TimeMilli = tstamp
-
-			//}
 			// Different block could share same sealhash, deep copy here to prevent write-write conflict.
 			var (
 				receipts = make([]*types.Receipt, len(task.receipts))
