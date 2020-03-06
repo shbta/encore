@@ -52,6 +52,8 @@ func clearName() (ret string) {
 		log.Fatal(err)
 	} else if err = clearABI.Unpack(&rr, "name", res); err != nil {
 		log.Fatal("Unpack name() ", err)
+		//} else {
+		//	log.Println("result:", res[:32], res[32:64], res[64:])
 	}
 	if res, ok := rr.(string); !ok {
 		log.Fatal("type of return mismatch")

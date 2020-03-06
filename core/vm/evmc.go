@@ -324,7 +324,8 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 		// Guess if this is a CREATE.
 		kind = evmc.Create
 		// Encore, validate ewasm module
-		mod := wasm.ValModule{OnlyValidate: true, OnlyRelease: true}
+		//mod := wasm.ValModule{OnlyValidate: true, OnlyRelease: true}
+		mod := wasm.ValModule{OnlyValidate: true}
 		if err := mod.ReadValModule(contract.Code); err != nil {
 			log.Error("ewasm ReadValModule", "error", err)
 			return nil, err
@@ -332,6 +333,9 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 		if err := mod.Validate(); err != nil {
 			log.Error("ewasm Validate", "error", err)
 			return nil, err
+		}
+		if mod.HasDebug() {
+			log.Warn("contract imported debug module, deploy may fail")
 		}
 		// Cannot change contract code here, strip should be done before sign
 		/*

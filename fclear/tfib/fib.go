@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	wasm "github.com/shbta/go-wasm"
 )
 
 var fibDef = `[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"uint32","name":"n","type":"uint32"}],"name":"FibValue","outputs":[{"internalType":"uint64","name":"res","type":"uint64"}],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`
@@ -109,8 +110,25 @@ func runConstruct() error {
 	return nil
 }
 
-func deploy(code []byte) (common.Address, error) {
+func deploy(code []byte, bValidate bool) (common.Address, error) {
 	// cost about 30469 gas
+	if bValidate {
+		var mod wasm.ValModule
+		if err := mod.ReadValModule(code); err != nil {
+			log.Println("ewasm ReadValModule", err)
+			return emptyAddr, err
+		}
+		if err := mod.Validate(); err != nil {
+			log.Println("ewasm Validate", err)
+			return emptyAddr, err
+		}
+		ocLen := len(code)
+		if ncLen := len(mod.Bytes()); ncLen < ocLen {
+			code = mod.Bytes()
+			log.Printf("ewasm contract stripped, old CodeLen %d stripped %d bytes", ocLen, ocLen-ncLen)
+		}
+	}
+	log.Printf("ewasm contract length: %d\n", len(code))
 	gasLimit := uint64(1500000) // in units
 	tx := ethereum.CallMsg{
 		From: *accounts[0],
@@ -162,6 +180,7 @@ func main() {
 	var dumpABI bool
 	var codeDeploy string
 	var abiPath string
+	var bRawContract bool
 	var fibN uint
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
 	flag.UintVar(&fibN, "fib", 50, "number of fibonacci seq")
@@ -171,6 +190,7 @@ func main() {
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.StringVar(&abiPath, "abi", "", "path of ABI file")
+	flag.BoolVar(&bRawContract, "raw", false, "deploy contract as RAW no strpping")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: tfib [options]\n")
 		flag.PrintDefaults()
@@ -238,7 +258,7 @@ func main() {
 			log.Fatal(err)
 		} else {
 			ff.Close()
-			if addr, err := deploy(code); err != nil {
+			if addr, err := deploy(code, !bRawContract); err != nil {
 				if addr != emptyAddr {
 					log.Fatal(addr.Hex(), " error:", err)
 				} else {
