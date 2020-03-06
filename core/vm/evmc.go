@@ -324,7 +324,7 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 		// Guess if this is a CREATE.
 		kind = evmc.Create
 		// Encore, validate ewasm module
-		mod := wasm.ValModule{OnlyValidate: true}
+		mod := wasm.ValModule{OnlyValidate: true, OnlyRelease: true}
 		if err := mod.ReadValModule(contract.Code); err != nil {
 			log.Error("ewasm ReadValModule", "error", err)
 			return nil, err
