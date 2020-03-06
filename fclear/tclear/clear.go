@@ -213,14 +213,14 @@ func dealClearing(clt, qty uint32, price uint64, sym, member uint16, isOff,
 	return hash, err
 }
 
-func deploy(code []byte) (common.Address, error) {
+func deploy(code []byte, bValidate bool) (common.Address, error) {
 	// cost about 30469 gas
 	// cost about 1003264 gas for testfib DEBUG version
 	// cost about 863740 gas for testfib Release version
 	// cost about 1229104 gas for clear DEBUG version
 	// cost about 1096008 gas for clear Release version
-	var mod wasm.ValModule
-	{
+	if bValidate {
+		var mod wasm.ValModule
 		if err := mod.ReadValModule(code); err != nil {
 			log.Println("ewasm ReadValModule", err)
 			return emptyAddr, err
@@ -235,6 +235,7 @@ func deploy(code []byte) (common.Address, error) {
 			log.Printf("ewasm contract stripped, old CodeLen %d stripped %d bytes", ocLen, ocLen-ncLen)
 		}
 	}
+	log.Printf("ewasm contract length: %d\n", len(code))
 
 	gasLimit := uint64(1500000) // in units
 	tx := ethereum.CallMsg{
@@ -286,6 +287,7 @@ func main() {
 	var dataDir string
 	var ctAddr string
 	var dumpABI bool
+	var bRawContract bool
 	var codeDeploy string
 	var abiPath string
 	flag.IntVar(&count, "count", 1000, "number of contract calls")
@@ -293,6 +295,7 @@ func main() {
 	flag.StringVar(&ctAddr, "contract", "0xf5704f03B4e5833AF156B768aCf76Af6491E258D", "Address of Clearing contract")
 	//flag.StringVar(&ctAddr, "contract", "0x6866423b57c92e666274eb8f982FA1438735Ef2B", "Address of Clearing contract")
 	flag.BoolVar(&dumpABI, "dump", false, "dump clearABI")
+	flag.BoolVar(&bRawContract, "raw", false, "deploy contract as RAW no strpping")
 	flag.StringVar(&codeDeploy, "deploy", "", "code to deploy")
 	flag.StringVar(&abiPath, "abi", "", "path of ABI file")
 	flag.Usage = func() {
@@ -362,7 +365,7 @@ func main() {
 			log.Fatal(err)
 		} else {
 			ff.Close()
-			if addr, err := deploy(code); err != nil {
+			if addr, err := deploy(code, !bRawContract); err != nil {
 				if addr != emptyAddr {
 					log.Fatal(addr.Hex(), " error:", err)
 				} else {
