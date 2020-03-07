@@ -18,7 +18,7 @@ static ewasm_argument	result1[]={{UINT64}};
 static ewasm_argument	retAddr[]={{UINT160}};
 static ewasm::method	_methods[]={
 	{"constructor", 0},
-	{"fib", 0x73181a7b, arg1, result1},
+	{"FibValue", 0x73181a7b, arg1, result1},
 	{"owner", 0x8da5cb5b, 0, retAddr},
 };
 
