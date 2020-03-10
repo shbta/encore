@@ -27,8 +27,8 @@ func init() {
 	//vm.InitEVMCEVM("libevmone.so")
 	//vm.InitEVMCEwasm("libhera.so,engine=wabt,benchmark=true,evm1mode=reject")
 	//vm.InitEVMCEwasm("libhera.so,engine=binaryen,benchmark=true,evm1mode=reject")
-	vm.InitEVMCEwasm("libhera.so,engine=wabt,evm1mode=reject")
-	//vm.InitEVMCEwasm("libathena.so,engine=wabt,evm1mode=reject")
+	//vm.InitEVMCEwasm("libhera.so,engine=wabt,evm1mode=reject")
+	vm.InitEVMCEwasm("libathena.so,engine=wabt,evm1mode=reject")
 	//vm.InitEVMCEwasm("libzeus.so,evm1mode=reject")
 }
 
