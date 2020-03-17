@@ -73,10 +73,10 @@ require (
 )
 
 replace (
-	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20190308221718-c2843e01d9a2
-	golang.org/x/net => github.com/golang/net v0.0.0-20190628185345-da137c7871d7
+	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20200311171314-f7b00557c8c4
+	golang.org/x/net => github.com/golang/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/sync => github.com/golang/sync v0.0.0-20181108010431-42b317875d0f
-	golang.org/x/sys => github.com/golang/sys v0.0.0-20190712062909-fae7ac547cb7
+	golang.org/x/sys => github.com/golang/sys v0.0.0-20200302150141-5c8b2ff67527
 	golang.org/x/text => github.com/golang/text v0.3.2
 	golang.org/x/time => github.com/golang/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools => github.com/golang/tools v0.0.0-20180917221912-90fa682c2a6e
