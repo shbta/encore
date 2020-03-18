@@ -374,7 +374,8 @@ func (evm *EVMC) Run(contract *Contract, input []byte, readOnly bool) (ret []byt
 	if err == evmc.Revert {
 		err = errExecutionReverted
 	} else if evmcError, ok := err.(evmc.Error); ok && evmcError.IsInternalError() {
-		panic(fmt.Sprintf("EVMC VM internal error: %s", evmcError.Error()))
+		log.Error("EVMC VM internal error", "error", evmcError.Error())
+		err = errExecutionReverted
 	}
 
 	return output, err
