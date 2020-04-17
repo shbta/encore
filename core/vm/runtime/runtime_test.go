@@ -99,7 +99,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
-	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	address := common.HexToAddress("0x0a")
 	state.SetCode(address, []byte{
 		byte(vm.PUSH1), 10,
@@ -125,7 +125,7 @@ var definition = `[{"constant":true,"inputs":[{"name":"n","type":"uint32"}],"nam
 var fibCode = common.Hex2Bytes("60806040526004361061004b5763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166373181a7b81146100505780638da5cb5b14610099575b600080fd5b34801561005c57600080fd5b506100806004803603602081101561007357600080fd5b503563ffffffff166100d7565b6040805163ffffffff9092168252519081900360200190f35b3480156100a557600080fd5b506100ae6100ea565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b60006100e282610106565b90505b919050565b60005473ffffffffffffffffffffffffffffffffffffffff1681565b600060028263ffffffff16101561011e5750806100e5565b61012a60028303610106565b61013660018403610106565b019291505056fea165627a7a723058201c43ed84caef923c027f7e1066b562e8300aaedeb109169706ff0b179d9180bc0029")
 
 func TestCallFib(t *testing.T) {
-	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	address := common.HexToAddress("0x0a")
 	state.SetCode(address, fibCode)
 	abi, err := abi.JSON(strings.NewReader(definition))
@@ -172,7 +172,7 @@ func BenchmarkCall(b *testing.B) {
 }
 func benchmarkEVM_Create(bench *testing.B, code string) {
 	var (
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 		sender     = common.BytesToAddress([]byte("sender"))
 		receiver   = common.BytesToAddress([]byte("receiver"))
 	)
@@ -332,5 +332,33 @@ func TestBlockhash(t *testing.T) {
 	}
 	if exp, got := 255, chain.counter; exp != got {
 		t.Errorf("suboptimal; too much chain iteration, expected %d, got %d", exp, got)
+	}
+}
+
+// BenchmarkSimpleLoop test a pretty simple loop which loops
+// 1M (1 048 575) times.
+// Takes about 200 ms
+func BenchmarkSimpleLoop(b *testing.B) {
+	// 0xfffff = 1048575 loops
+	code := []byte{
+		byte(vm.PUSH3), 0x0f, 0xff, 0xff,
+		byte(vm.JUMPDEST), //  [ count ]
+		byte(vm.PUSH1), 1, // [count, 1]
+		byte(vm.SWAP1),    // [1, count]
+		byte(vm.SUB),      // [ count -1 ]
+		byte(vm.DUP1),     //  [ count -1 , count-1]
+		byte(vm.PUSH1), 4, // [count-1, count -1, label]
+		byte(vm.JUMPI), // [ 0 ]
+		byte(vm.STOP),
+	}
+	//tracer := vm.NewJSONLogger(nil, os.Stdout)
+	//Execute(code, nil, &Config{
+	//	EVMConfig: vm.Config{
+	//		Debug:  true,
+	//		Tracer: tracer,
+	//	}})
+
+	for i := 0; i < b.N; i++ {
+		Execute(code, nil, nil)
 	}
 }
