@@ -557,6 +557,7 @@ func (p *serverPeer) HasBlock(hash common.Hash, number uint64, hasState bool) bo
 		recent = p.chainRecent
 	}
 	hasBlock := p.hasBlock
+	p.lock.RUnlock()
 
 	return head >= number && number >= since && (recent == 0 || number+recent+4 > head) && hasBlock != nil && hasBlock(hash, number, hasState)
 }
