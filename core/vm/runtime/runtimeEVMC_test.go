@@ -124,7 +124,7 @@ func TestExecuteEWASM(t *testing.T) {
 var definition = `[{"constant":true,"inputs":[{"name":"n","type":"uint32"}],"name":"FibValue","outputs":[{"name":"res","type":"uint64"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor","signature":"constructor"}]`
 
 func TestCall(t *testing.T) {
-	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+	state, _ := state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 	address := common.HexToAddress("0x0a")
 	code := wasmCode
 	state.SetCode(address, code)
@@ -153,7 +153,7 @@ func TestCall(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	var (
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 		sender     = common.BytesToAddress([]byte("sender"))
 	)
 
@@ -205,7 +205,7 @@ func BenchmarkCall(b *testing.B) {
 
 func benchmarkEVM_Create(bench *testing.B, code string) {
 	var (
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 		sender     = common.BytesToAddress([]byte("sender"))
 		receiver   = common.BytesToAddress([]byte("receiver"))
 	)
@@ -243,7 +243,7 @@ func benchmarkEVM_Create(bench *testing.B, code string) {
 
 func benchmarkEVM_CreateNew(bench *testing.B, code []byte) {
 	var (
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()))
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(rawdb.NewMemoryDatabase()), nil)
 		sender     = common.BytesToAddress([]byte("sender"))
 	)
 
