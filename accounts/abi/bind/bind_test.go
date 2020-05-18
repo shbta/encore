@@ -199,7 +199,8 @@ var bindTests = []struct {
 				{"type":"event","name":"indexed","inputs":[{"name":"addr","type":"address","indexed":true},{"name":"num","type":"int256","indexed":true}]},
 				{"type":"event","name":"mixed","inputs":[{"name":"addr","type":"address","indexed":true},{"name":"num","type":"int256"}]},
 				{"type":"event","name":"anonymous","anonymous":true,"inputs":[]},
-				{"type":"event","name":"dynamic","inputs":[{"name":"idxStr","type":"string","indexed":true},{"name":"idxDat","type":"bytes","indexed":true},{"name":"str","type":"string"},{"name":"dat","type":"bytes"}]}
+				{"type":"event","name":"dynamic","inputs":[{"name":"idxStr","type":"string","indexed":true},{"name":"idxDat","type":"bytes","indexed":true},{"name":"str","type":"string"},{"name":"dat","type":"bytes"}]},
+				{"type":"event","name":"unnamed","inputs":[{"name":"","type":"uint256","indexed": true},{"name":"","type":"uint256","indexed":true}]}
 			]
 		`},
 		`
@@ -249,6 +250,12 @@ var bindTests = []struct {
 			 fmt.Println(event.Addr)          // Make sure the reconstructed indexed fields are present
 
 			 fmt.Println(res, str, dat, hash, err)
+
+			 oit, err := e.FilterUnnamed(nil, []*big.Int{}, []*big.Int{})
+
+			 arg0  := oit.Event.Arg0    // Make sure unnamed arguments are handled correctly
+			 arg1  := oit.Event.Arg1    // Make sure unnamed arguments are handled correctly
+			 fmt.Println(arg0, arg1)
 		 }
 		 // Run a tiny reflection test to ensure disallowed methods don't appear
 		 if _, ok := reflect.TypeOf(&EventChecker{}).MethodByName("FilterAnonymous"); ok {
@@ -1737,21 +1744,6 @@ func TestGolangBindings(t *testing.T) {
 	moder.Dir = pkg
 	if out, err := moder.CombinedOutput(); err != nil {
 		t.Fatalf("failed to convert binding test to modules: %v\n%s", err, out)
-	}
-	if ff, err := os.OpenFile(filepath.Join(pkg, "go.mod"), os.O_RDWR|os.O_APPEND, 0644); err == nil {
-		txt := []byte(`
-replace (
-	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20190308221718-c2843e01d9a2
-	golang.org/x/net => github.com/golang/net v0.0.0-20190628185345-da137c7871d7
-	golang.org/x/sync => github.com/golang/sync v0.0.0-20181108010431-42b317875d0f
-	golang.org/x/sys => github.com/golang/sys v0.0.0-20190712062909-fae7ac547cb7
-	golang.org/x/text => github.com/golang/text v0.3.2
-	golang.org/x/time => github.com/golang/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools => github.com/golang/tools v0.0.0-20180917221912-90fa682c2a6e
-)
-`)
-		ff.Write(txt)
-		ff.Close()
 	}
 	pwd, _ := os.Getwd()
 	replacer := exec.Command(gocmd, "mod", "edit", "-replace", "github.com/ethereum/go-ethereum="+filepath.Join(pwd, "..", "..", "..")) // Repo root
