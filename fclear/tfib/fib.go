@@ -63,7 +63,7 @@ func FibValue(fn uint) (ret uint64) {
 
 func runConstruct() error {
 	var fibBytes []byte
-	if fibABI.Constructor.Sig() != "()" {
+	if fibABI.Constructor.Sig != "()" {
 		if cBytes, err := fibABI.Pack("", uint32(5),
 			"SHFE Clear"); err != nil {
 			return err
@@ -220,11 +220,11 @@ func main() {
 		{
 			ab := fibABI.Constructor
 			fmt.Printf("Constructor Method %s Id: %s, Sig: %s\n",
-				ab.Name, common.ToHex(ab.ID()), ab.Sig())
+				ab.Name, common.ToHex(ab.ID), ab.Sig)
 		}
 		for _, ab := range fibABI.Methods {
 			fmt.Printf("Method %s Id: %s, Sig: %s\n", ab.Name,
-				common.ToHex(ab.ID()), ab.Sig())
+				common.ToHex(ab.ID), ab.Sig)
 		}
 		os.Exit(0)
 	}
