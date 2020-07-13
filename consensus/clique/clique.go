@@ -325,7 +325,7 @@ func (c *Clique) verifyCascadingFields(chain consensus.ChainReader, header *type
 	// Encore
 	// blocks may mined within same second
 	//if parent.Time()+c.config.Period > header.Time() {
-	if parent.Time()+c.config.Period > header.Time() {
+	if parent.TimeMilli > header.TimeMilli {
 		return errInvalidTimestamp
 	}
 	// Retrieve the snapshot needed to verify this header and cache it
