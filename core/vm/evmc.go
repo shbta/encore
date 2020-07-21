@@ -30,6 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/evmc"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/holiman/uint256"
 
 	"github.com/shbta/go-wasm"
 )
@@ -263,7 +264,8 @@ func (host *hostContext) Call(kind evmc.CallKind,
 		}
 	case evmc.Create2:
 		var createOutput []byte
-		createOutput, createAddr, gasLeftU, err = host.env.Create2(host.contract, input, gasU, value, salt)
+		saltN, _ := uint256.FromBig(salt)
+		createOutput, createAddr, gasLeftU, err = host.env.Create2(host.contract, input, gasU, value, saltN)
 		if err == ErrExecutionReverted {
 			// Assign return buffer from REVERT.
 			// TODO: Bad API design: return data buffer and the code is returned in the same place. In worst case
