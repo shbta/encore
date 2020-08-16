@@ -63,14 +63,7 @@ func ExpFactor(logOffset Fixed64) ExpirationFactor {
 // Value calculates the expired value based on a floating point base and integer
 // power-of-2 exponent. This function should be used by multi-value expired structures.
 func (e ExpirationFactor) Value(base float64, exp uint64) float64 {
-	res := base / e.Factor
-	if exp > e.Exp {
-		res *= float64(uint64(1) << (exp - e.Exp))
-	}
-	if exp < e.Exp {
-		res /= float64(uint64(1) << (e.Exp - exp))
-	}
-	return res
+	return base / e.Factor * math.Pow(2, float64(int64(exp-e.Exp)))
 }
 
 // value calculates the value at the given moment.
@@ -129,6 +122,50 @@ func (e *ExpiredValue) SubExp(a ExpiredValue) {
 	} else {
 		e.Base = 0
 	}
+}
+
+// LinearExpiredValue is very similar with the expiredValue which the value
+// will continuously expired. But the different part is it's expired linearly.
+type LinearExpiredValue struct {
+	Offset uint64         // The latest time offset
+	Val    uint64         // The remaining value, can never be negative
+	Rate   mclock.AbsTime `rlp:"-"` // Expiration rate(by nanosecond), will ignored by RLP
+}
+
+// value calculates the value at the given moment. This function always has the
+// assumption that the given timestamp shouldn't less than the recorded one.
+func (e LinearExpiredValue) Value(now mclock.AbsTime) uint64 {
+	offset := uint64(now / e.Rate)
+	if e.Offset < offset {
+		diff := offset - e.Offset
+		if e.Val >= diff {
+			e.Val -= diff
+		} else {
+			e.Val = 0
+		}
+	}
+	return e.Val
+}
+
+// add adds a signed value at the given moment. This function always has the
+// assumption that the given timestamp shouldn't less than the recorded one.
+func (e *LinearExpiredValue) Add(amount int64, now mclock.AbsTime) uint64 {
+	offset := uint64(now / e.Rate)
+	if e.Offset < offset {
+		diff := offset - e.Offset
+		if e.Val >= diff {
+			e.Val -= diff
+		} else {
+			e.Val = 0
+		}
+		e.Offset = offset
+	}
+	if amount < 0 && uint64(-amount) > e.Val {
+		e.Val = 0
+	} else {
+		e.Val = uint64(int64(e.Val) + amount)
+	}
+	return e.Val
 }
 
 // Expirer changes logOffset with a linear rate which can be changed during operation.
