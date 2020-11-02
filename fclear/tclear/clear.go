@@ -50,7 +50,7 @@ func clearName() (ret string) {
 	var rr interface{}
 	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Fatal(err)
-	} else if err = clearABI.Unpack(&rr, "name", res); err != nil {
+	} else if err = clearABI.UnpackIntoInterface(&rr, "name", res); err != nil {
 		log.Fatal("Unpack name() ", err)
 		//} else {
 		//	log.Println("result:", res[:32], res[32:64], res[64:])
@@ -80,7 +80,7 @@ func getClientPosition(clt uint32, sym, member uint16) (nLong, nShort uint32) {
 	var rr [2]interface{}
 	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Fatal(err)
-	} else if err = clearABI.Unpack(&rr, "getClientPosition", res); err != nil {
+	} else if err = clearABI.UnpackIntoInterface(&rr, "getClientPosition", res); err != nil {
 		log.Fatal(err, "res:", res)
 	} else {
 		nLong = rr[0].(uint32)

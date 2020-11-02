@@ -50,7 +50,7 @@ func FibValue(fn uint) (ret uint64) {
 	var rr interface{}
 	if res, err := client.CallContract(ctx, tx, nil); err != nil {
 		log.Fatal(err)
-	} else if err = fibABI.Unpack(&rr, "FibValue", res); err != nil {
+	} else if err = fibABI.UnpackIntoInterface(&rr, "FibValue", res); err != nil {
 		log.Fatal("Unpack FibValue() ", err)
 	}
 	if res, ok := rr.(uint64); !ok {

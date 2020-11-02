@@ -148,7 +148,7 @@ func TestCallFib(t *testing.T) {
 	}
 
 	var num uint64
-	if err := abi.Unpack(&num, "FibValue", ret); err != nil {
+	if err := abi.UnpackIntoInterface(&num, "FibValue", ret); err != nil {
 		t.Fatal("abi Unpack", err)
 	}
 	if num != 6765 {

@@ -143,10 +143,12 @@ func (host *hostContext) SetStorage(addr common.Address, key common.Hash, value 
 	resetClearRefund := params.NetSstoreResetClearRefund
 	cleanRefund := params.NetSstoreResetRefund
 
-	if hasEIP2200 {
-		resetClearRefund = params.SstoreInitRefundEIP2200
-		cleanRefund = params.SstoreCleanRefundEIP2200
-	}
+	/*
+		if hasEIP2200 {
+			resetClearRefund = params.SstoreInitRefundEIP2200
+			cleanRefund = params.SstoreCleanRefundEIP2200
+		}
+	*/
 
 	if original == current {
 		if original == (common.Hash{}) { // create slot (2.1.1)
