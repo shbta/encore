@@ -396,6 +396,24 @@ func DefaultYoloV1GenesisBlock() *Genesis {
 	}
 }
 
+// DefaultEncoreGenesisBlock returns the Encore main net genesis block.
+func DefaultEncoreGenesisBlock() *Genesis {
+	return &Genesis{
+		Config:     params.EncoreChainConfig,
+		Nonce:      0,
+		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000076141059a474c1f17fc1f8fbfb35711e759a6d91c4440e485035fc357f8cefa4db162e5f8c6861b8a99c8b23686d1a079d3db4702a6ed40bc6b156f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+		GasLimit:   0x47b760,
+		Difficulty: big.NewInt(1),
+		Alloc: map[common.Address]GenesisAccount{
+			common.HexToAddress("0x8a99c8b23686d1a079d3db4702a6ed40bc6b156f"): {Balance: math.MustParseBig256("1000000000000000000000000000")}, // account1
+			common.HexToAddress("0x1c4440e485035fc357f8cefa4db162e5f8c6861b"): {Balance: math.MustParseBig256("2000000000000000000000000000")}, // account2
+			common.HexToAddress("0x076141059a474c1f17fc1f8fbfb35711e759a6d9"): {Balance: math.MustParseBig256("3000000000000000000000000000")}, // account3
+			common.HexToAddress("0x40A95b6Ee9a8dc8a4B6E140da1f275a89d17466D"): {Balance: math.MustParseBig256("1500000000000000000000000000")}, // account4
+			common.HexToAddress("0x280241001c9B2a31E18260B6De51E905A328d597"): {Balance: math.MustParseBig256("1600000000000000000000000000")}, // account5
+		},
+	}
+}
+
 // DeveloperGenesisBlock returns the 'geth --dev' genesis block.
 func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
 	// Override the default period to the user requested one

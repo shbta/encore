@@ -46,7 +46,7 @@ import (
 )
 
 const (
-	clientIdentifier = "encore" // Client identifier to advertise over the network
+	clientIdentifier = "geth" // Client identifier to advertise over the network
 )
 
 var (
@@ -145,6 +145,7 @@ var (
 		utils.RinkebyFlag,
 		utils.GoerliFlag,
 		utils.YoloV1Flag,
+		utils.EncoreFlag,
 		utils.VMEnableDebugFlag,
 		utils.NetworkIdFlag,
 		utils.EthStatsURLFlag,

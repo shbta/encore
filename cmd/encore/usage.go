@@ -43,6 +43,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.GoerliFlag,
 			utils.RinkebyFlag,
 			utils.YoloV1Flag,
+			utils.EncoreFlag,
 			utils.RopstenFlag,
 			utils.SyncModeFlag,
 			utils.ExitWhenSyncedFlag,

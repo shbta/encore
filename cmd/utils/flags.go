@@ -147,6 +147,10 @@ var (
 		Name:  "ropsten",
 		Usage: "Ropsten network: pre-configured proof-of-work test network",
 	}
+	EncoreFlag = cli.BoolFlag{
+		Name:  "encore",
+		Usage: "Encore network: pre-configured ePOA test network.",
+	}
 	DeveloperFlag = cli.BoolFlag{
 		Name:  "dev",
 		Usage: "Ephemeral proof-of-authority network with a pre-funded developer account, mining enabled",
@@ -1610,6 +1614,11 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 			cfg.NetworkId = 133519467574833 // "yolov1"
 		}
 		cfg.Genesis = core.DefaultYoloV1GenesisBlock()
+	case ctx.GlobalBool(EncoreFlag.Name):
+		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = 1337 // "Encore"
+		}
+		cfg.Genesis = core.DefaultEncoreGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337

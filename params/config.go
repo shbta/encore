@@ -32,6 +32,7 @@ var (
 	RinkebyGenesisHash = common.HexToHash("0x6341fd3daf94b748c72ced5a5b26028f2474f5f00d824504e4fa37a75767e177")
 	GoerliGenesisHash  = common.HexToHash("0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")
 	YoloV1GenesisHash  = common.HexToHash("0xc3fd235071f24f93865b0850bd2a2119b30f7224d18a0e34c7bbf549ad7e3d36")
+	EncoreGenesisHash  = common.HexToHash("0x2fdddb80f21a340820188d480ac6fb0e847426e304abca9b2d0828208ec1df22")
 )
 
 // TrustedCheckpoints associates each known checkpoint with the genesis hash of
@@ -230,6 +231,20 @@ var (
 		YoloV1Block:         big.NewInt(0),
 		Clique: &CliqueConfig{
 			Period: 15,
+			Epoch:  30000,
+		},
+	}
+
+	EncoreChainConfig = &ChainConfig{
+		ChainID:        big.NewInt(1337),
+		HomesteadBlock: big.NewInt(0),
+		EIP150Block:    big.NewInt(0),
+		EIP150Hash:     common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		EIP155Block:    big.NewInt(0),
+		EIP158Block:    big.NewInt(0),
+		ByzantiumBlock: big.NewInt(0),
+		Clique: &CliqueConfig{
+			Period: 60,
 			Epoch:  30000,
 		},
 	}
