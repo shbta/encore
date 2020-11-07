@@ -27,7 +27,7 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/core"
+	//"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
@@ -126,7 +126,8 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 	// Default to encore
 	cfg.Eth.NetworkId = 1337 // "Encore"
-	cfg.Eth.Genesis = core.DefaultEncoreGenesisBlock()
+	//cfg.Eth.Genesis = core.DefaultEncoreGenesisBlock()
+	cfg.Node.Name = "encore"
 	// Load config file.
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
