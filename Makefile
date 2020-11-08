@@ -17,8 +17,9 @@ geth:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
 
-encore:
-	$(GORUN) build/ci.go install ./cmd/encore
+encore: geth
+	[ -f build/bin/geth ] && cp build/bin/geth build/bin/encore
+	@strip build/bin/encore
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/encore\" to launch encore."
 
