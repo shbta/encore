@@ -329,11 +329,11 @@ func main() {
 		{
 			ab := clearABI.Constructor
 			fmt.Printf("Constructor Method %s Id: %s, Sig: %s\n",
-				ab.Name, common.ToHex(ab.ID), ab.Sig)
+				ab.Name, common.Bytes2Hex(ab.ID), ab.Sig)
 		}
 		for _, ab := range clearABI.Methods {
 			fmt.Printf("Method %s Id: %s, Sig: %s\n", ab.Name,
-				common.ToHex(ab.ID), ab.Sig)
+				common.Bytes2Hex(ab.ID), ab.Sig)
 		}
 		os.Exit(0)
 	}
