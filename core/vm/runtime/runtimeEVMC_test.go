@@ -32,6 +32,25 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 )
 
+var defTestConfig Config
+
+func init() {
+	cfg := &defTestConfig
+	if cfg.ChainConfig == nil {
+		cfg.ChainConfig = &params.ChainConfig{
+			ChainID:        big.NewInt(1),
+			HomesteadBlock: new(big.Int),
+			DAOForkBlock:   new(big.Int),
+			DAOForkSupport: false,
+			EIP150Block:    new(big.Int),
+			EIP150Hash:     common.Hash{},
+			EIP155Block:    new(big.Int),
+			EIP158Block:    new(big.Int),
+			ByzantiumBlock: new(big.Int),
+		}
+	}
+}
+
 func TestDefaults(t *testing.T) {
 	cfg := new(Config)
 	setDefaults(cfg)
@@ -85,7 +104,7 @@ var wasmCode = common.Hex2Bytes("0061736d010000000113046000017f60027f7f0060037f7
 
 func TestExecute(t *testing.T) {
 	code := evmCode
-	ret, _, err := Execute(code, nil, nil)
+	ret, _, err := Execute(code, nil, &defTestConfig)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -110,7 +129,7 @@ func TestExecuteEWASM(t *testing.T) {
 	code := wasmCode
 	println("test execute EWASM file Len:", len(code))
 
-	ret, _, err := Execute(code, nil, nil)
+	ret, _, err := Execute(code, nil, &defTestConfig)
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -137,7 +156,8 @@ func TestCall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ret, _, err := Call(address, cpurchase, &Config{State: state})
+	ret, _, err := Call(address, cpurchase, &Config{State: state,
+		ChainConfig: defTestConfig.ChainConfig})
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -179,7 +199,7 @@ func TestCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ret code len:", len(code1))
-	t.Log("ret addr:", common.ToHex(address.Bytes()))
+	t.Log("ret addr:", common.Bytes2Hex(address.Bytes()))
 	t.Log("gas used:", 10000000-leftOverGas)
 }
 
