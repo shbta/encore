@@ -326,6 +326,7 @@ func (c *Console) Welcome() {
 		sort.Strings(modules)
 		message += " modules: " + strings.Join(modules, " ") + "\n"
 	}
+	message += "\nTo exit, press ctrl-d"
 	fmt.Fprintln(c.printer, message)
 }
 
@@ -374,7 +375,7 @@ func (c *Console) Interactive() {
 			return
 
 		case err := <-inputErr:
-			if err == liner.ErrPromptAborted && indents > 0 {
+			if err == liner.ErrPromptAborted {
 				// When prompting for multi-line input, the first Ctrl-C resets
 				// the multi-line state.
 				prompt, indents, input = c.prompt, 0, ""
