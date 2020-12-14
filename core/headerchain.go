@@ -373,15 +373,12 @@ func (hc *HeaderChain) InsertHeaderChain(chain []*types.Header, start time.Time)
 		"count", res.imported,
 		"elapsed", common.PrettyDuration(time.Since(start)),
 	}
-	if timestamp := time.Unix(int64(last.Time()), 0); time.Since(timestamp) > time.Minute {
-		context = append(context, []interface{}{"age", common.PrettyAge(timestamp)}...)
-	}
 	if err != nil {
 		context = append(context, "err", err)
 	}
 	if last := res.lastHeader; last != nil {
 		context = append(context, "number", last.Number, "hash", res.lastHash)
-		if timestamp := time.Unix(int64(last.Time), 0); time.Since(timestamp) > time.Minute {
+		if timestamp := time.Unix(int64(last.Time()), 0); time.Since(timestamp) > time.Minute {
 			context = append(context, []interface{}{"age", common.PrettyAge(timestamp)}...)
 		}
 	}
