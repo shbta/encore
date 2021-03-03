@@ -131,6 +131,24 @@ func TestInvalidSign(t *testing.T) {
 	}
 }
 
+func TestNewContractAddress(t *testing.T) {
+	key, _ := HexToECDSA(testPrivHex)
+	addr := common.HexToAddress(testAddrHex)
+	genAddr := PubkeyToAddress(key.PublicKey)
+	// sanity check before using addr to create contract address
+	checkAddr(t, genAddr, addr)
+
+	caddr0 := CreateAddress(addr, 0)
+	caddr1 := CreateAddress(addr, 1)
+	caddr2 := CreateAddress(addr, 2)
+	//t.Logf("Contract Addr0: %x", caddr0)
+	//t.Logf("Contract Addr1: %x", caddr1)
+	//t.Logf("Contract Addr2: %x", caddr2)
+	checkAddr(t, common.HexToAddress("5eb514442694da1e2fc96d5a42cb601cc9297a5b"), caddr0)
+	checkAddr(t, common.HexToAddress("e8d22fa88075ca56df1882ab8789c41d98b40883"), caddr1)
+	checkAddr(t, common.HexToAddress("7f131723daaaf4e135cc0f6972a20d863efe969d"), caddr2)
+}
+
 func TestLoadECDSA(t *testing.T) {
 	tests := []struct {
 		input string
@@ -259,6 +277,12 @@ func checkhash(t *testing.T, name string, f func([]byte) []byte, msg, exp []byte
 	sum := f(msg)
 	if !bytes.Equal(exp, sum) {
 		t.Fatalf("hash %s mismatch: want: %x have: %x", name, exp, sum)
+	}
+}
+
+func checkAddr(t *testing.T, addr0, addr1 common.Address) {
+	if addr0 != addr1 {
+		t.Fatalf("address mismatch: want: %x have: %x", addr0, addr1)
 	}
 }
 

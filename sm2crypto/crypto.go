@@ -29,9 +29,10 @@ import (
 	"math/big"
 	"os"
 
+	"gitee.com/jkuang/go-fastecdsa/sm2"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/kjx98/go-fastecdsa/sm2"
+	"github.com/ethereum/go-ethereum/rlp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -103,6 +104,20 @@ func Keccak512(data ...[]byte) []byte {
 	}
 	return d.Sum(nil)
 }
+
+// CreateAddress creates an ethereum address given the bytes and the nonce
+func CreateAddress(b common.Address, nonce uint64) common.Address {
+	data, _ := rlp.EncodeToBytes([]interface{}{b, nonce})
+	return common.BytesToAddress(Keccak256(data)[12:])
+}
+
+// CreateAddress2 creates an ethereum address given the address bytes, initial
+// contract code hash and a salt.
+func CreateAddress2(b common.Address, salt [32]byte, inithash []byte) common.Address {
+	return common.BytesToAddress(Keccak256([]byte{0xff}, b.Bytes(), salt[:], inithash)[12:])
+}
+
+// ToECDSA creates a private key with the given D value.
 
 // ToECDSA creates a private key with the given D value.
 func ToECDSA(d []byte) (*ecdsa.PrivateKey, error) {

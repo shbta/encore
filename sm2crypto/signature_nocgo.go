@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"gitee.com/jkuang/go-fastecdsa/sm2"
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/kjx98/go-fastecdsa/sm2"
 )
 
 // Ecrecover returns the uncompressed public key that created the given signature.

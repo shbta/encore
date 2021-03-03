@@ -153,20 +153,11 @@ func BenchmarkEcrecoverSignature(b *testing.B) {
 
 func BenchmarkVerifySignature(b *testing.B) {
 	sig := testsig[:len(testsig)-1] // remove recovery id
-	/*
-		for i := 0; i < b.N; i++ {
-			if !VerifySignature(testpubkey, testmsg, sig) {
-				b.Fatal("verify error")
-			}
+	for i := 0; i < b.N; i++ {
+		if !VerifySignature(testpubkey, testmsg, sig) {
+			b.Fatal("verify error")
 		}
-	*/
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			if !VerifySignature(testpubkey, testmsg, sig) {
-				b.Fatal("verify error")
-			}
-		}
-	})
+	}
 }
 
 func BenchmarkDecompressPubkey(b *testing.B) {
