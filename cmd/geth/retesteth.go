@@ -212,7 +212,8 @@ func (e *NoRewardEngine) VerifyUncles(chain consensus.ChainReader, block *types.
 }
 
 func (e *NoRewardEngine) VerifySeal(chain consensus.ChainHeaderReader, header *types.Header) error {
-	return e.inner.VerifySeal(chain, header)
+	//return e.inner.VerifySeal(chain, header)
+	return e.inner.VerifyHeader(chain, header, true)
 }
 
 func (e *NoRewardEngine) Prepare(chain consensus.ChainHeaderReader, header *types.Header) error {
