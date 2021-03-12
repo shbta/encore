@@ -208,6 +208,10 @@ var (
 		Usage: "Number of recent blocks to maintain transactions index by-hash for (default = index all blocks)",
 		Value: 0,
 	}
+	SM2SignerFlag = cli.BoolFlag{
+		Name:  "sm2",
+		Usage: "use SM2 signer default under sm2keystore",
+	}
 	LightKDFFlag = cli.BoolFlag{
 		Name:  "lightkdf",
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
@@ -1225,6 +1229,9 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 
 	if ctx.GlobalIsSet(KeyStoreDirFlag.Name) {
 		cfg.KeyStoreDir = ctx.GlobalString(KeyStoreDirFlag.Name)
+	}
+	if ctx.GlobalIsSet(SM2SignerFlag.Name) {
+		cfg.SM2Signer = ctx.GlobalBool(SM2SignerFlag.Name)
 	}
 	if ctx.GlobalIsSet(LightKDFFlag.Name) {
 		cfg.UseLightweightKDF = ctx.GlobalBool(LightKDFFlag.Name)

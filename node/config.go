@@ -85,6 +85,9 @@ type Config struct {
 	// ExternalSigner specifies an external URI for a clef-type signer
 	ExternalSigner string `toml:",omitempty"`
 
+	// Use SM2 Signer
+	SM2Signer bool `toml:",omitempty"`
+
 	// UseLightweightKDF lowers the memory and CPU requirements of the key store
 	// scrypt KDF at the expense of security.
 	UseLightweightKDF bool `toml:",omitempty"`
@@ -435,7 +438,11 @@ func (c *Config) AccountConfig() (int, int, string, error) {
 		keydir = c.KeyStoreDir
 	case c.DataDir != "":
 		if c.KeyStoreDir == "" {
-			keydir = filepath.Join(c.DataDir, datadirDefaultKeyStore)
+			if c.SM2Signer {
+				keydir = filepath.Join(c.DataDir, "sm2"+datadirDefaultKeyStore)
+			} else {
+				keydir = filepath.Join(c.DataDir, datadirDefaultKeyStore)
+			}
 		} else {
 			keydir, err = filepath.Abs(c.KeyStoreDir)
 		}
