@@ -96,6 +96,7 @@ Make sure you backup your keys regularly.`,
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
+					utils.SM2SignerFlag,
 				},
 				Description: `
 Print a short summary of all accounts`,
@@ -107,6 +108,7 @@ Print a short summary of all accounts`,
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
+					utils.SM2SignerFlag,
 					utils.PasswordFileFlag,
 					utils.LightKDFFlag,
 				},
@@ -133,6 +135,7 @@ password to file or expose in any other way.
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
+					utils.SM2SignerFlag,
 					utils.LightKDFFlag,
 				},
 				Description: `
@@ -161,6 +164,7 @@ changing your password is only possible interactively.
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
+					utils.SM2SignerFlag,
 					utils.PasswordFileFlag,
 					utils.LightKDFFlag,
 				},
