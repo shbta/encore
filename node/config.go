@@ -30,6 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/external"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/accounts/scwallet"
+	"github.com/ethereum/go-ethereum/accounts/sm2keystore"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -482,7 +483,11 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 		// If/when we implement some form of lockfile for USB and keystore wallets,
 		// we can have both, but it's very confusing for the user to see the same
 		// accounts in both externally and locally, plus very racey.
-		backends = append(backends, keystore.NewKeyStore(keydir, scryptN, scryptP))
+		if conf.SM2Signer {
+			backends = append(backends, sm2keystore.NewKeyStore(keydir, scryptN, scryptP))
+		} else {
+			backends = append(backends, keystore.NewKeyStore(keydir, scryptN, scryptP))
+		}
 		if !conf.NoUSB {
 			// Start a USB hub for Ledger hardware wallets
 			if ledgerhub, err := usbwallet.NewLedgerHub(); err != nil {
@@ -513,7 +518,10 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 		}
 	}
 
-	return accounts.NewManager(&accounts.Config{InsecureUnlockAllowed: conf.InsecureUnlockAllowed}, backends...), ephemeral, nil
+	return accounts.NewManager(&accounts.Config{
+		InsecureUnlockAllowed: conf.InsecureUnlockAllowed,
+		ViaSM2:                conf.SM2Signer},
+		backends...), ephemeral, nil
 }
 
 var warnLock sync.Mutex

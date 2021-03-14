@@ -31,6 +31,7 @@ import (
 // is removed in favor of Clef.
 type Config struct {
 	InsecureUnlockAllowed bool // Whether account unlocking in insecure environment is allowed
+	ViaSM2                bool // keystore via SM2
 }
 
 // Manager is an overarching account manager that can communicate with various
