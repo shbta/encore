@@ -36,6 +36,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/sm2crypto"
+	//"gitee.com/jkuang/sm2-eth/sm2crypto"
 	"github.com/ethereum/go-ethereum/event"
 )
 
@@ -270,6 +272,9 @@ func (ks *KeyStore) SignHash(a accounts.Account, hash []byte) ([]byte, error) {
 		return nil, ErrLocked
 	}
 	// Sign the hash using plain ECDSA operations
+	if unlockedKey.Version == versionSM2 {
+		return sm2crypto.Sign(hash, unlockedKey.PrivateKey)
+	}
 	return crypto.Sign(hash, unlockedKey.PrivateKey)
 }
 
@@ -285,6 +290,9 @@ func (ks *KeyStore) SignTx(a accounts.Account, tx *types.Transaction, chainID *b
 	}
 	// Depending on the presence of the chain ID, sign with 2718 or homestead
 	signer := types.LatestSignerForChainID(chainID)
+	if unlockedKey.Version == versionSM2 {
+		//		return types.SignTxSM2(tx, signer, unlockedKey.PrivateKey)
+	}
 	return types.SignTx(tx, signer, unlockedKey.PrivateKey)
 }
 
@@ -297,6 +305,9 @@ func (ks *KeyStore) SignHashWithPassphrase(a accounts.Account, passphrase string
 		return nil, err
 	}
 	defer zeroKey(key.PrivateKey)
+	if key.Version == versionSM2 {
+		return sm2crypto.Sign(hash, key.PrivateKey)
+	}
 	return crypto.Sign(hash, key.PrivateKey)
 }
 
@@ -310,6 +321,9 @@ func (ks *KeyStore) SignTxWithPassphrase(a accounts.Account, passphrase string, 
 	defer zeroKey(key.PrivateKey)
 	// Depending on the presence of the chain ID, sign with or without replay protection.
 	signer := types.LatestSignerForChainID(chainID)
+	if key.Version == versionSM2 {
+		//		return types.SignTxSM2(tx, signer, key.PrivateKey)
+	}
 	return types.SignTx(tx, signer, key.PrivateKey)
 }
 
@@ -418,6 +432,18 @@ func (ks *KeyStore) NewAccount(passphrase string) (accounts.Account, error) {
 	return account, nil
 }
 
+func (ks *KeyStore) NewAccountSM2(passphrase string) (accounts.Account, error) {
+	_, account, err := storeNewKeySM2(ks.storage, crand.Reader, passphrase)
+	if err != nil {
+		return accounts.Account{}, err
+	}
+	// Add the account to the cache immediately rather
+	// than waiting for file system notifications to pick it up.
+	ks.cache.add(account)
+	ks.refreshWallets()
+	return account, nil
+}
+
 // Export exports as a JSON key, encrypted with newPassphrase.
 func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string) (keyJSON []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
@@ -459,6 +485,20 @@ func (ks *KeyStore) ImportECDSA(priv *ecdsa.PrivateKey, passphrase string) (acco
 	defer ks.importMu.Unlock()
 
 	key := newKeyFromECDSA(priv)
+	if ks.cache.hasAddress(key.Address) {
+		return accounts.Account{
+			Address: key.Address,
+		}, ErrAccountAlreadyExists
+	}
+	return ks.importKey(key, passphrase)
+}
+
+// ImportSM2 stores the given key into the key directory, encrypting it with the passphrase.
+func (ks *KeyStore) ImportSM2(priv *ecdsa.PrivateKey, passphrase string) (accounts.Account, error) {
+	ks.importMu.Lock()
+	defer ks.importMu.Unlock()
+
+	key := newKeyFromSM2(priv)
 	if ks.cache.hasAddress(key.Address) {
 		return accounts.Account{
 			Address: key.Address,

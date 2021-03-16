@@ -42,6 +42,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/sm2crypto"
+	//"gitee.com/jkuang/sm2-eth/sm2crypto"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
@@ -193,7 +195,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 		hex.EncodeToString(key.Address[:]),
 		cryptoStruct,
 		key.Id.String(),
-		version,
+		key.Version,
 	}
 	return json.Marshal(encryptedKeyJSONV3)
 }
@@ -209,6 +211,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	var (
 		keyBytes, keyId []byte
 		err             error
+		vers            int
 	)
 	if version, ok := m["version"].(string); ok && version == "1" {
 		k := new(encryptedKeyJSONV1)
@@ -222,10 +225,24 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 			return nil, err
 		}
 		keyBytes, keyId, err = decryptKeyV3(k, auth)
+		vers = k.Version
 	}
 	// Handle any decryption errors and return the key
 	if err != nil {
 		return nil, err
+	}
+	if vers == versionSM2 {
+		key := sm2crypto.ToECDSAUnsafe(keyBytes)
+		id, err := uuid.FromBytes(keyId)
+		if err != nil {
+			return nil, err
+		}
+		return &Key{
+			Id:         id,
+			Address:    sm2crypto.PubkeyToAddress(key.PublicKey),
+			PrivateKey: key,
+			Version:    versionSM2,
+		}, nil
 	}
 	key := crypto.ToECDSAUnsafe(keyBytes)
 	id, err := uuid.FromBytes(keyId)
@@ -236,6 +253,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		Id:         id,
 		Address:    crypto.PubkeyToAddress(key.PublicKey),
 		PrivateKey: key,
+		Version:    version,
 	}, nil
 }
 
@@ -276,7 +294,10 @@ func DecryptDataV3(cryptoJson CryptoJSON, auth string) ([]byte, error) {
 }
 
 func decryptKeyV3(keyProtected *encryptedKeyJSONV3, auth string) (keyBytes []byte, keyId []byte, err error) {
-	if keyProtected.Version != version {
+	if keyProtected.Version == 0 {
+		keyProtected.Version = version
+	}
+	if keyProtected.Version != version && keyProtected.Version != versionSM2 {
 		return nil, nil, fmt.Errorf("version not supported: %v", keyProtected.Version)
 	}
 	keyUUID, err := uuid.Parse(keyProtected.Id)

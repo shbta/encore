@@ -32,11 +32,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/sm2crypto"
 	"github.com/google/uuid"
 )
 
 const (
-	version = 3
+	version    = 3
+	versionSM2 = 314
 )
 
 type Key struct {
@@ -46,6 +48,7 @@ type Key struct {
 	// we only store privkey as pubkey/address can be derived from it
 	// privkey in this struct is always in plaintext
 	PrivateKey *ecdsa.PrivateKey
+	Version    int
 }
 
 type keyStore interface {
@@ -93,10 +96,14 @@ type cipherparamsJSON struct {
 
 func (k *Key) MarshalJSON() (j []byte, err error) {
 	jStruct := plainKeyJSON{
-		hex.EncodeToString(k.Address[:]),
-		hex.EncodeToString(crypto.FromECDSA(k.PrivateKey)),
-		k.Id.String(),
-		version,
+		Address: hex.EncodeToString(k.Address[:]),
+		Id:      k.Id.String(),
+		Version: k.Version,
+	}
+	if k.Version == versionSM2 {
+		jStruct.PrivateKey = hex.EncodeToString(sm2crypto.FromECDSA(k.PrivateKey))
+	} else {
+		jStruct.PrivateKey = hex.EncodeToString(crypto.FromECDSA(k.PrivateKey))
 	}
 	j, err = json.Marshal(jStruct)
 	return j, err
@@ -119,9 +126,15 @@ func (k *Key) UnmarshalJSON(j []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	privkey, err := crypto.HexToECDSA(keyJSON.PrivateKey)
-	if err != nil {
-		return err
+	var privkey *ecdsa.PrivateKey
+	if keyJSON.Version == versionSM2 {
+		if privkey, err = sm2crypto.HexToECDSA(keyJSON.PrivateKey); err != nil {
+			return err
+		}
+	} else {
+		if privkey, err = crypto.HexToECDSA(keyJSON.PrivateKey); err != nil {
+			return err
+		}
 	}
 
 	k.Address = common.BytesToAddress(addr)
@@ -139,6 +152,21 @@ func newKeyFromECDSA(privateKeyECDSA *ecdsa.PrivateKey) *Key {
 		Id:         id,
 		Address:    crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),
 		PrivateKey: privateKeyECDSA,
+		Version:    version,
+	}
+	return key
+}
+
+func newKeyFromSM2(privateKeyECDSA *ecdsa.PrivateKey) *Key {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		panic(fmt.Sprintf("Could not create random uuid: %v", err))
+	}
+	key := &Key{
+		Id:         id,
+		Address:    sm2crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),
+		PrivateKey: privateKeyECDSA,
+		Version:    versionSM2,
 	}
 	return key
 }
@@ -174,6 +202,30 @@ func newKey(rand io.Reader) (*Key, error) {
 
 func storeNewKey(ks keyStore, rand io.Reader, auth string) (*Key, accounts.Account, error) {
 	key, err := newKey(rand)
+	if err != nil {
+		return nil, accounts.Account{}, err
+	}
+	a := accounts.Account{
+		Address: key.Address,
+		URL:     accounts.URL{Scheme: KeyStoreScheme, Path: ks.JoinPath(keyFileName(key.Address))},
+	}
+	if err := ks.StoreKey(a.URL.Path, key, auth); err != nil {
+		zeroKey(key.PrivateKey)
+		return nil, a, err
+	}
+	return key, a, err
+}
+
+func newKeySM2(rand io.Reader) (*Key, error) {
+	privateKeyECDSA, err := ecdsa.GenerateKey(sm2crypto.S256(), rand)
+	if err != nil {
+		return nil, err
+	}
+	return newKeyFromSM2(privateKeyECDSA), nil
+}
+
+func storeNewKeySM2(ks keyStore, rand io.Reader, auth string) (*Key, accounts.Account, error) {
+	key, err := newKeySM2(rand)
 	if err != nil {
 		return nil, accounts.Account{}, err
 	}
