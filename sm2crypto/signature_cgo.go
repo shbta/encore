@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// +build !amd64,!arm64 cgo
+// +build !amd64,!arm64,cgo
 
 package sm2crypto
 
@@ -35,7 +35,7 @@ func Ecrecover(hash, sig []byte) ([]byte, error) {
 	}
 	r := new(big.Int).SetBytes(sig[:32])
 	s := new(big.Int).SetBytes(sig[32:64])
-	v := uint(sig[64])
+	v := uint(sig[64] & 1)
 	msg := new(big.Int).SetBytes(hash)
 	px, py, err := ecc.SM2C().Recover(r, s, msg, v)
 	if err != nil {
@@ -88,7 +88,7 @@ func Sign(digestHash []byte, prv *ecdsa.PrivateKey) (sig []byte, err error) {
 	} else {
 		copy(sig[32:], rB)
 	}
-	sig[64] = byte(v)
+	sig[64] = byte(v | 2)
 	return sig, nil
 }
 

@@ -66,6 +66,7 @@ var (
 		utils.DataDirFlag,
 		utils.AncientFlag,
 		utils.KeyStoreDirFlag,
+		utils.SM2SignerFlag,
 		utils.ExternalSignerFlag,
 		utils.NoUSBFlag,
 		utils.SmartCardDaemonPathFlag,

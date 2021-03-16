@@ -506,7 +506,9 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 		}
 	}
 
-	return accounts.NewManager(&accounts.Config{InsecureUnlockAllowed: conf.InsecureUnlockAllowed}, backends...), ephemeral, nil
+	return accounts.NewManager(&accounts.Config{
+		InsecureUnlockAllowed: conf.InsecureUnlockAllowed},
+		backends...), ephemeral, nil
 }
 
 var warnLock sync.Mutex
