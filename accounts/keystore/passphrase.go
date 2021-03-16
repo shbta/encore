@@ -105,6 +105,11 @@ func StoreKey(dir, auth string, scryptN, scryptP int) (accounts.Account, error) 
 	return a, err
 }
 
+func StoreKeySM2(dir, auth string, scryptN, scryptP int) (accounts.Account, error) {
+	_, a, err := storeNewKeySM2(&keyStorePassphrase{dir, scryptN, scryptP, false}, rand.Reader, auth)
+	return a, err
+}
+
 func (ks keyStorePassphrase) StoreKey(filename string, key *Key, auth string) error {
 	keyjson, err := EncryptKey(key, auth, ks.scryptN, ks.scryptP)
 	if err != nil {

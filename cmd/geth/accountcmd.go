@@ -17,6 +17,7 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"io/ioutil"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/sm2crypto"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -96,7 +98,6 @@ Make sure you backup your keys regularly.`,
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
-					utils.SM2SignerFlag,
 				},
 				Description: `
 Print a short summary of all accounts`,
@@ -280,7 +281,12 @@ func accountCreate(ctx *cli.Context) error {
 
 	password := utils.GetPassPhraseWithList("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
 
-	account, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
+	var account accounts.Account
+	if ctx.GlobalIsSet(utils.SM2SignerFlag.Name) {
+		account, err = keystore.StoreKeySM2(keydir, password, scryptN, scryptP)
+	} else {
+		account, err = keystore.StoreKey(keydir, password, scryptN, scryptP)
+	}
 
 	if err != nil {
 		utils.Fatalf("Failed to create account: %v", err)
@@ -341,7 +347,13 @@ func accountImport(ctx *cli.Context) error {
 	if len(keyfile) == 0 {
 		utils.Fatalf("keyfile must be given as argument")
 	}
-	key, err := crypto.LoadECDSA(keyfile)
+	var key *ecdsa.PrivateKey
+	var err error
+	if ctx.GlobalIsSet(utils.SM2SignerFlag.Name) {
+		key, err = sm2crypto.LoadECDSA(keyfile)
+	} else {
+		key, err = crypto.LoadECDSA(keyfile)
+	}
 	if err != nil {
 		utils.Fatalf("Failed to load the private key: %v", err)
 	}
@@ -349,7 +361,12 @@ func accountImport(ctx *cli.Context) error {
 	passphrase := utils.GetPassPhraseWithList("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	acct, err := ks.ImportECDSA(key, passphrase)
+	var acct accounts.Account
+	if ctx.GlobalIsSet(utils.SM2SignerFlag.Name) {
+		acct, err = ks.ImportSM2(key, passphrase)
+	} else {
+		acct, err = ks.ImportECDSA(key, passphrase)
+	}
 	if err != nil {
 		utils.Fatalf("Could not create the account: %v", err)
 	}
