@@ -30,6 +30,7 @@ import (
 )
 
 // Ecrecover returns the uncompressed public key that created the given signature.
+// v may be 0,1 or 2,3
 func Ecrecover(hash, sig []byte) ([]byte, error) {
 	if len(sig) != SignatureLength {
 		return nil, fmt.Errorf("signature length %d error", len(sig))
@@ -63,7 +64,7 @@ func SigToPub(hash, sig []byte) (*ecdsa.PublicKey, error) {
 // be aware that the given digest cannot be chosen by an adversery. Common
 // solution is to hash any input before calculating the signature.
 //
-// The produced signature is in the [R || S || V] format where V is 0 or 1.
+// The produced signature is in the [R || S || V] format where V is 2 or 3.
 func Sign(digestHash []byte, prv *ecdsa.PrivateKey) (sig []byte, err error) {
 	if len(digestHash) != DigestLength {
 		return nil, fmt.Errorf("hash is required to be exactly %d bytes (%d)", DigestLength, len(digestHash))

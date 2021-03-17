@@ -145,7 +145,7 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 
 	// The priv.D must < N
 	if priv.D.Cmp(sm2N1) >= 0 {
-		return nil, fmt.Errorf("invalid private key, >=N")
+		return nil, fmt.Errorf("invalid private key, >= N-1")
 	}
 	// The priv.D must not be zero or negative.
 	if priv.D.Sign() <= 0 {
@@ -267,8 +267,8 @@ func ValidateSignatureValues(v byte, r, s *big.Int, homestead bool) bool {
 	if r.Cmp(common.Big1) < 0 || s.Cmp(common.Big1) < 0 {
 		return false
 	}
-	// Frontier: allow s to be in full N range
-	return r.Cmp(sm2N) < 0 && s.Cmp(sm2N) < 0 && (v == 0 || v == 1)
+	// not SM2, Frontier: allow s to be in full N range
+	return r.Cmp(sm2N) < 0 && s.Cmp(sm2N) < 0 && (v&0xfe) == 0
 }
 
 func PubkeyToAddress(p ecdsa.PublicKey) common.Address {

@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/sm2crypto"
 )
 
 var (
@@ -197,9 +198,15 @@ func sanityCheckSignature(v *big.Int, r *big.Int, s *big.Int, maybeProtected boo
 	}
 
 	var plainV byte
+	bSM2 := false
+	chainID := deriveChainId(v).Uint64()
 	if isProtectedV(v) {
-		chainID := deriveChainId(v).Uint64()
-		plainV = byte(v.Uint64() - 35 - 2*chainID)
+		if v.Sign() > 0 {
+			plainV = byte(v.Uint64() - 35 - 2*chainID)
+		} else {
+			plainV = byte(v.Neg(v).Uint64() - 35 - 2*chainID)
+			bSM2 = true
+		}
 	} else if maybeProtected {
 		// Only EIP-155 signatures can be optionally protected. Since
 		// we determined this v value is not protected, it must be a
@@ -210,8 +217,14 @@ func sanityCheckSignature(v *big.Int, r *big.Int, s *big.Int, maybeProtected boo
 		// must already be equal to the recovery id.
 		plainV = byte(v.Uint64())
 	}
-	if !crypto.ValidateSignatureValues(plainV, r, s, false) {
-		return ErrInvalidSig
+	if bSM2 {
+		if !sm2crypto.ValidateSignatureValues(plainV, r, s, false) {
+			return ErrInvalidSig
+		}
+	} else {
+		if !crypto.ValidateSignatureValues(plainV, r, s, false) {
+			return ErrInvalidSig
+		}
 	}
 
 	return nil

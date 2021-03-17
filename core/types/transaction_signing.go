@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/sm2crypto"
 )
 
 var ErrInvalidChainId = errors.New("invalid chain id for signer")
@@ -116,6 +117,16 @@ func MustSignNewTx(prv *ecdsa.PrivateKey, s Signer, txdata TxData) *Transaction 
 	return tx
 }
 
+// SignTxSM2 signs the transaction using the given signer and private key.
+func SignTxSM2(tx *Transaction, s Signer, prv *ecdsa.PrivateKey) (*Transaction, error) {
+	h := s.Hash(tx)
+	sig, err := sm2crypto.Sign(h[:], prv)
+	if err != nil {
+		return nil, err
+	}
+	return tx.WithSignature(s, sig)
+}
+
 // Sender returns the address derived from the signature (V, R, S) using secp256k1
 // elliptic curve and an error if it failed deriving or upon an incorrect
 // signature.
@@ -184,10 +195,15 @@ func (s eip2930Signer) Equal(s2 Signer) bool {
 
 func (s eip2930Signer) Sender(tx *Transaction) (common.Address, error) {
 	V, R, S := tx.RawSignatureValues()
+	bSM2 := false
 	switch tx.Type() {
 	case LegacyTxType:
 		if !tx.Protected() {
 			return HomesteadSigner{}.Sender(tx)
+		}
+		if V.Sign() < 0 {
+			bSM2 = true
+			V.Neg(V)
 		}
 		V = new(big.Int).Sub(V, s.chainIdMul)
 		V.Sub(V, big8)
@@ -201,6 +217,9 @@ func (s eip2930Signer) Sender(tx *Transaction) (common.Address, error) {
 	if tx.ChainId().Cmp(s.chainId) != 0 {
 		return common.Address{}, ErrInvalidChainId
 	}
+	if bSM2 {
+		return recoverPlainSM2(s.Hash(tx), R, S, V, true)
+	}
 	return recoverPlain(s.Hash(tx), R, S, V, true)
 }
 
@@ -209,8 +228,12 @@ func (s eip2930Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *bi
 	case *LegacyTx:
 		R, S, V = decodeSignature(sig)
 		if s.chainId.Sign() != 0 {
-			V = big.NewInt(int64(sig[64] + 35))
+			V = big.NewInt(int64((sig[64] & 1) + 35))
 			V.Add(V, s.chainIdMul)
+			if (sig[64] & 2) != 0 {
+				// SM2
+				V.Neg(V)
+			}
 		}
 	case *AccessListTx:
 		// Check that chain ID of tx matches the signer. We also accept ID zero here,
@@ -300,8 +323,15 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 		return common.Address{}, ErrInvalidChainId
 	}
 	V, R, S := tx.RawSignatureValues()
+	bSM2 := V.Sign() < 0
+	if bSM2 {
+		V.Neg(V)
+	}
 	V = new(big.Int).Sub(V, s.chainIdMul)
 	V.Sub(V, big8)
+	if bSM2 {
+		return recoverPlainSM2(s.Hash(tx), R, S, V, true)
+	}
 	return recoverPlain(s.Hash(tx), R, S, V, true)
 }
 
@@ -313,8 +343,11 @@ func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big
 	}
 	R, S, V = decodeSignature(sig)
 	if s.chainId.Sign() != 0 {
-		V = big.NewInt(int64(sig[64] + 35))
+		V = big.NewInt(int64((sig[64] & 1) + 35))
 		V.Add(V, s.chainIdMul)
+	}
+	if (sig[64] & 2) != 0 {
+		V.Neg(V)
 	}
 	return R, S, V, nil
 }
@@ -439,6 +472,33 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (commo
 	return addr, nil
 }
 
+func recoverPlainSM2(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (common.Address, error) {
+	if Vb.BitLen() > 8 {
+		return common.Address{}, ErrInvalidSig
+	}
+	V := byte(Vb.Uint64() - 27)
+	if !sm2crypto.ValidateSignatureValues(V, R, S, homestead) {
+		return common.Address{}, ErrInvalidSig
+	}
+	// encode the signature in uncompressed format
+	r, s := R.Bytes(), S.Bytes()
+	sig := make([]byte, crypto.SignatureLength)
+	copy(sig[32-len(r):32], r)
+	copy(sig[64-len(s):64], s)
+	sig[64] = V
+	// recover the public key from the signature
+	pub, err := sm2crypto.Ecrecover(sighash[:], sig)
+	if err != nil {
+		return common.Address{}, err
+	}
+	if len(pub) == 0 || pub[0] != 4 {
+		return common.Address{}, errors.New("invalid public key")
+	}
+	var addr common.Address
+	copy(addr[:], crypto.Keccak256(pub[1:])[12:])
+	return addr, nil
+}
+
 // deriveChainId derives the chain id from the given v parameter
 func deriveChainId(v *big.Int) *big.Int {
 	if v.BitLen() <= 64 {
@@ -447,6 +507,11 @@ func deriveChainId(v *big.Int) *big.Int {
 			return new(big.Int)
 		}
 		return new(big.Int).SetUint64((v - 35) / 2)
+	}
+	if v.Sign() < 0 {
+		v = new(big.Int).Neg(v)
+		v = new(big.Int).Sub(v, big.NewInt(35))
+		return v.Div(v, big.NewInt(2))
 	}
 	v = new(big.Int).Sub(v, big.NewInt(35))
 	return v.Div(v, big.NewInt(2))
