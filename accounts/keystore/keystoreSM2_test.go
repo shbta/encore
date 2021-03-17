@@ -81,8 +81,12 @@ func TestSignSM2(t *testing.T) {
 	if err := ks.Unlock(a1, ""); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ks.SignHash(accounts.Account{Address: a1.Address}, testSigData); err != nil {
+	if sig, err := ks.SignHash(accounts.Account{Address: a1.Address}, testSigData); err != nil {
 		t.Fatal(err)
+	} else if len(sig) != 65 {
+		t.Errorf("Signature length %d error", len(sig))
+	} else if (sig[64] & 2) == 0 {
+		t.Errorf("v of Signature %x should set or 2", sig[64])
 	}
 }
 

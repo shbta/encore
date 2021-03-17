@@ -39,6 +39,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/sm2crypto"
 	"github.com/ethereum/go-ethereum/trie"
 	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/crypto/sha3"
@@ -156,7 +157,13 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, er
 	signature := header.Extra[len(header.Extra)-extraSeal:]
 
 	// Recover the public key and the Ethereum address
-	pubkey, err := crypto.Ecrecover(SealHash(header).Bytes(), signature)
+	var pubkey []byte
+	var err error
+	if (signature[64] & 2) != 0 {
+		pubkey, err = sm2crypto.Ecrecover(SealHash(header).Bytes(), signature)
+	} else {
+		pubkey, err = crypto.Ecrecover(SealHash(header).Bytes(), signature)
+	}
 	if err != nil {
 		return common.Address{}, err
 	}
