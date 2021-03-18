@@ -291,7 +291,7 @@ func (ks *KeyStore) SignTx(a accounts.Account, tx *types.Transaction, chainID *b
 	// Depending on the presence of the chain ID, sign with 2718 or homestead
 	signer := types.LatestSignerForChainID(chainID)
 	if unlockedKey.Version == versionSM2 {
-		//		return types.SignTxSM2(tx, signer, unlockedKey.PrivateKey)
+		return types.SignTxSM2(tx, signer, unlockedKey.PrivateKey)
 	}
 	return types.SignTx(tx, signer, unlockedKey.PrivateKey)
 }
@@ -322,7 +322,7 @@ func (ks *KeyStore) SignTxWithPassphrase(a accounts.Account, passphrase string, 
 	// Depending on the presence of the chain ID, sign with or without replay protection.
 	signer := types.LatestSignerForChainID(chainID)
 	if key.Version == versionSM2 {
-		//		return types.SignTxSM2(tx, signer, key.PrivateKey)
+		return types.SignTxSM2(tx, signer, key.PrivateKey)
 	}
 	return types.SignTx(tx, signer, key.PrivateKey)
 }
