@@ -248,6 +248,8 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.GoerliChainConfig
 	case ghash == params.YoloV3GenesisHash:
 		return params.YoloV3ChainConfig
+	case ghash == params.EncoreGenesisHash:
+		return params.EncoreChainConfig
 	default:
 		return params.AllEthashProtocolChanges
 	}
