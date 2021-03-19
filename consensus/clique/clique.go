@@ -50,7 +50,7 @@ const (
 	inmemorySnapshots  = 128  // Number of recent vote snapshots to keep in memory
 	inmemorySignatures = 4096 // Number of recent block signatures to keep in memory
 
-	wiggleTime = 500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
+	wiggleTime = 2500 * time.Millisecond // Random delay (per signer) to allow concurrent signers
 	//maxSigners = 5                      // next 13,21?
 )
 
@@ -628,7 +628,7 @@ func (c *Clique) Seal(chain consensus.ChainHeaderReader, block *types.Block, res
 		}
 	}
 	// Sweet, the protocol permits us to sign the block, wait for our time
-	delay := time.Unix(int64(header.Time()), 0).Sub(time.Now()) // nolint: gosimple
+	delay := time.Unix(int64(header.Time()), 0).Sub(time.Now())
 	// Encore
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
 		// Encore, compare TimeMilli and timestamp even better
