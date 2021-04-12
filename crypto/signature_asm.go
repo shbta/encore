@@ -26,7 +26,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto/asm"
+	btc "github.com/ethereum/go-ethereum/crypto/btcasm"
 )
 
 // Ecrecover returns the uncompressed public key that created the given signature.
@@ -56,7 +56,7 @@ func SigToPub(hash, sig []byte) (*ecdsa.PublicKey, error) {
 	return &ecdsa.PublicKey{Curve: S256(), X: x, Y: y}, nil
 }
 
-// Sign calculates an SM2 signature.
+// Sign calculates an secp256k1 signature.
 //
 // This function is susceptible to chosen plaintext attacks that can leak
 // information about the private key that is used for signing. Callers must
