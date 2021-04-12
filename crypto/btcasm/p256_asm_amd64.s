@@ -1563,7 +1563,7 @@ TEXT btcMulInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc3
 	ADCQ $0, acc0
 	ADCQ $0, acc1
-	
+
 	SUBQ hlp, acc2
 	SBBQ $0, acc3
 	SBBQ $0, acc0
@@ -1581,7 +1581,7 @@ TEXT btcMulInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc0
 	ADCQ $0, acc1
 	ADCQ $0, acc2
-	
+
 	SUBQ hlp, acc3
 	SBBQ $0, acc0
 	SBBQ $0, acc1
@@ -1599,7 +1599,7 @@ TEXT btcMulInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc1
 	ADCQ $0, acc2
 	ADCQ $0, acc3
-	
+
 	SUBQ hlp, acc0
 	SBBQ $0, acc1
 	SBBQ $0, acc2
@@ -1716,7 +1716,7 @@ TEXT btcSqrInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc2
 	ADCQ $0, acc3
 	ADCQ hlp, acc0
-	
+
 	SUBQ hlp, acc1
 	SBBQ $0, acc2
 	SBBQ $0, acc3
@@ -1734,7 +1734,7 @@ TEXT btcSqrInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc3
 	ADCQ $0, acc0
 	ADCQ hlp, acc1
-	
+
 	SUBQ hlp, acc2
 	SBBQ $0, acc3
 	SBBQ $0, acc0
@@ -1752,7 +1752,7 @@ TEXT btcSqrInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc0
 	ADCQ $0, acc1
 	ADCQ hlp, acc2
-	
+
 	SUBQ hlp, acc3
 	SBBQ $0, acc0
 	SBBQ $0, acc1
@@ -1770,7 +1770,7 @@ TEXT btcSqrInternal(SB),NOSPLIT,$0
 	ADCQ $0, acc1
 	ADCQ $0, acc2
 	ADCQ hlp, acc3
-	
+
 	SUBQ hlp, acc0
 	SBBQ $0, acc1
 	SBBQ $0, acc2
