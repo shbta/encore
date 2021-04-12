@@ -25,6 +25,7 @@ type (
 	p256Curve struct {
 		*CurveParams
 		pMinusN *big.Int
+		halfN   *big.Int
 	}
 
 	p256Point struct {
@@ -59,6 +60,7 @@ func initBTC() {
 	// See FIPS 186-3, section D.2.3
 	n2minus = new(big.Int).Sub(secp256k1Params.N, two)
 	pBTC.pMinusN = new(big.Int).Sub(pBTC.P, pBTC.N)
+	pBTC.halfN = new(big.Int).Rsh(secp256k1Params.N, 1)
 }
 
 func (curve p256Curve) Params() *CurveParams {
@@ -270,7 +272,10 @@ func (c p256Curve) Verify(r, s, msg, px, py *big.Int) bool {
 	if r.Sign() <= 0 || s.Sign() <= 0 {
 		return false
 	}
-	if r.Cmp(N) >= 0 || s.Cmp(N) >= 0 {
+	if s.Cmp(c.halfN) > 0 {
+		return false
+	}
+	if r.Cmp(N) >= 0 {
 		return false
 	}
 	sInv := new(big.Int).ModInverse(s, N)

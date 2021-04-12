@@ -4,7 +4,6 @@ package btc
 
 import (
 	"crypto/rand"
-	"gitee.com/jkuang/go-fastecdsa"
 	"math/big"
 	"testing"
 )
@@ -270,19 +269,6 @@ func TestPointRecover(t *testing.T) {
 		t.Logf("RecoverPoint step2 diff:\n%s vs\n%s", py.Text(16), py2.Text(16))
 		t.Fail()
 	}
-}
-
-func BenchmarkAsmInverse(b *testing.B) {
-	priv, _ := fastecdsa.GenerateKey(BTC(), rand.Reader)
-	var res, yy [4]uint64
-	fromBig(yy[:], priv.PublicKey.X)
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			p256Inverse(res[:], yy[:])
-		}
-	})
 }
 
 func BenchmarkAsmMontModMul(b *testing.B) {
