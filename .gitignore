@@ -21,6 +21,7 @@ build/_vendor/pkg
 *~
 *.orig
 *.rej
+*.so
 .project
 .settings
 *.o
