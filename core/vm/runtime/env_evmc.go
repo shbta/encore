@@ -34,20 +34,20 @@ func init() {
 }
 
 func NewEnv(cfg *Config) *vm.EVM {
-	context := vm.Context{
+	context := vm.BlockContext{
 		CanTransfer: core.CanTransfer,
 		Transfer:    core.Transfer,
 		GetHash:     func(uint64) common.Hash { return common.Hash{} },
 
-		Origin:      cfg.Origin,
+		//Origin:      cfg.Origin,
 		Coinbase:    cfg.Coinbase,
 		BlockNumber: cfg.BlockNumber,
 		Time:        cfg.Time,
 		Difficulty:  cfg.Difficulty,
 		GasLimit:    cfg.GasLimit,
-		GasPrice:    cfg.GasPrice,
+		//GasPrice:    cfg.GasPrice,
 	}
 
 	cfg.EVMConfig.EWASMInterpreter = "libhera.so"
-	return vm.NewEVM(context, cfg.State, cfg.ChainConfig, cfg.EVMConfig)
+	return vm.NewEVM(context, vm.TxContext{}, cfg.State, cfg.ChainConfig, cfg.EVMConfig)
 }
