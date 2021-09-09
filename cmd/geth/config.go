@@ -54,6 +54,11 @@ var (
 		Name:  "config",
 		Usage: "TOML configuration file",
 	}
+
+	testNetFlag = cli.BoolFlag{
+		Name:  "test",
+		Usage: "test network",
+	}
 )
 
 // These settings ensure that TOML keys use the same names as Go struct fields.
@@ -119,7 +124,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	}
 
 	// Default to encore
-	if !inTesting {
+	if bTest := ctx.GlobalBool(testNetFlag.Name); !bTest && !inTesting {
 		cfg.Eth.NetworkId = 1337 // "Encore"
 		cfg.Eth.Genesis = core.DefaultEncoreGenesisBlock()
 		cfg.Node.Name = "encore"

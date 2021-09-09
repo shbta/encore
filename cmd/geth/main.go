@@ -153,6 +153,7 @@ var (
 		utils.EVMInterpreterFlag,
 		utils.MinerNotifyFullFlag,
 		configFileFlag,
+		testNetFlag,
 	}
 
 	rpcFlags = []cli.Flag{
