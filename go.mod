@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	gitee.com/jkuang/go-fastecdsa v0.6.3
-	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/VictoriaMetrics/fastcache v1.5.7
 	github.com/aws/aws-sdk-go-v2 v1.2.0
@@ -17,7 +16,7 @@ require (
 	github.com/consensys/gurvy v0.3.8
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
-	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
+	github.com/docker/docker v1.6.1
 	github.com/dop251/goja v0.0.0-20200721192441-a695b0cdd498
 	github.com/edsrzf/mmap-go v1.0.0
 	github.com/fatih/color v1.7.0
